@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import pandas as pd
-import seaborn as sns					# Not necessary
+import seaborn as sns					
 import vsom                             # Call vsom.f90 (Fortran package)
 from random import randint
 from sklearn.metrics.pairwise import euclidean_distances
@@ -11,10 +11,19 @@ from scipy import stats                 # KS Test
 from scipy.stats import f               # F-test
 from itertools import combinations
 import matplotlib.pyplot as plt
-# import time
+import time 							# Calculate the training time
 
 class map:
 	def __init__(self, xdim=10, ydim=5, alpha=.3, train=1000, algorithm="som", norm=False):
+		""" __init__ -- Initialize the Model 
+
+			parameters:
+			- xdim,ydim - the dimensions of the map
+			- alpha - the learning rate, should be a positive non-zero real number
+			- train - number of training iterations
+			- algorithm - selection switch (som and som_f)
+			- norm - normalize the input data space
+    		"""
 		self.xdim = xdim
 		self.ydim = ydim
 		self.alpha = alpha
@@ -23,7 +32,14 @@ class map:
 		self.norm = norm
 
 	def fit(self, data, labels):
-		# start_time = time.time()
+		""" fit -- Train the Model with Python or Fortran
+
+			parameters:
+			- data - a dataframe where each row contains an unlabeled training instance
+			- labels - a vector or dataframe with one label for each observation in data
+    		"""
+
+		start_time = time.time()
 		if self.norm:
 			data = data.div(data.sum(axis=1), axis=0)
 			
@@ -41,10 +57,10 @@ class map:
 		except ValueError:
 			sys.exit("build only supports 'som','som_f'")
 
-		if _index_algorithm == 0:        # som by python
+		if _index_algorithm == 0:        # train the model with python
 			self.vsom_p()
 
-		elif _index_algorithm == 1:      # som by Fortran
+		elif _index_algorithm == 1:      # train the model with Fortran
 			self.vsom_f()
 		
 		else:
@@ -58,9 +74,16 @@ class map:
 
 		self.visual = visual
 
+		# print the number of iteration and training time
 		# print(str(self.train) + "  Execute %s seconds " % (time.time() - start_time))
 
 	def marginal(self, marginal):
+		""" marginal -- plot that shows the marginal probability distribution of the neurons and data
+
+		 	parameters:
+		 	- marginal is the name of a training data frame dimension or index
+		"""
+		
 		# check if the second argument is of type character
 		if type(marginal) == str and marginal in list(self.data):
 
@@ -99,33 +122,32 @@ class map:
 						data frame dimension or index")
 
 	def vsom_p(self):
-		""" vsom_p - vectorized, unoptimized version of the stochastic SOM
-        	         training algorithm written entirely in python
-
-    	"""
-    	# some constants
+		""" vsom_p -- vectorized, unoptimized version of the stochastic SOM
+        		 	  training algorithm written entirely in python
+    		"""
+    		# some constants
 		dr = self.data.shape[0]
 		dc = self.data.shape[1]
 		nr = self.xdim*self.ydim
 		nc = dc  # dim of data and neurons is the same
 
-	    # build and initialize the matrix holding the neurons
+	    	# build and initialize the matrix holding the neurons
 		cells = nr * nc  # No. of neurons times number of data dimensions
 
-	    # vector with small init values for all neurons
+	    	# vector with small init values for all neurons
 		v = np.random.uniform(-1, 1, cells)
 
-	    # NOTE: each row represents a neuron, each column represents a dimension.
+	    	# NOTE: each row represents a neuron, each column represents a dimension.
 		neurons = np.transpose(np.reshape(v, (nc, nr)))  # rearrange the vector as matrix
 
 		# neurons = np.reshape(v, (nr, nc)) # Another option to reshape
 
-	    # compute the initial neighborhood size and step
+	    	# compute the initial neighborhood size and step
 		nsize = max(self.xdim, self.ydim) + 1
 		nsize_step = np.ceil(self.train/nsize)
 		step_counter = 0  # counts the number of epochs per nsize_step
 
-	    # convert a 1D rowindex into a 2D map coordinate
+	    	# convert a 1D rowindex into a 2D map coordinate
 		def coord2D(rowix):
 
 			x = np.array(rowix) % self.xdim
@@ -133,44 +155,43 @@ class map:
 
 			return np.concatenate((x, y))
 
-	    # constants for the Gamma function
+	    	# constants for the Gamma function
 		m = [i for i in range(nr)]  # a vector with all neuron 1D addresses
 
-	    # x-y coordinate of ith neuron: m2Ds[i,] = c(xi, yi)
+	   	# x-y coordinate of ith neuron: m2Ds[i,] = c(xi, yi)
 		m2Ds = np.matrix.transpose(coord2D(m).reshape(2, nr))
 
-	    # neighborhood function
+	    	# neighborhood function
 		def Gamma(c):
 
-	        # lookup the 2D map coordinate for c
+	        	# lookup the 2D map coordinate for c
 			c2D = m2Ds[c, ]
-	        # a matrix with each row equal to c2D
+	        	# a matrix with each row equal to c2D
 			c2Ds = np.outer(np.linspace(1, 1, nr), c2D)
-	        # distance vector of each neuron from c in terms of map coords!
+	        	# distance vector of each neuron from c in terms of map coords!
 			d = np.sqrt(np.dot((c2Ds - m2Ds)**2, [1, 1]))
-	        # if m on the grid is in neigh then alpha else 0.0
+	        	# if m on the grid is in neigh then alpha else 0.0
 			hood = np.where(d < nsize*1.5, self.alpha, 0.0)
 
 			return hood
 		
-	    # training #
-	    # the epochs loop
-		
+	    	# training #
+	    	# the epochs loop
 		for epoch in range(self.train):
 
-	        # hood size decreases in disrete nsize.steps
+	        	# hood size decreases in disrete nsize.steps
 			step_counter = step_counter + 1
 			if step_counter == nsize_step:
 
 				step_counter = 0
 				nsize = nsize - 1
 
-	        # create a sample training vector
+	        	# create a sample training vector
 			ix = randint(0, dr-1)
 			# ix = (epoch+1) % dr   # For Debugging
 			xk = self.data.iloc[[ix]]
 
-	        # competitive step
+	        	# competitive step
 			xk_m = np.outer(np.linspace(1, 1, nr), xk)
 			
 			diff = neurons - xk_m
@@ -179,29 +200,33 @@ class map:
 			o = np.argsort(s)
 			c = o[0]
 
-	        # update step
+	        	# update step
 			gamma_m = np.outer(Gamma(c), np.linspace(1, 1, nc))
 			neurons = neurons - diff * gamma_m
 		
 		self.neurons = neurons
 		
 	def vsom_f(self):
-	    # some constants
-	    dr = self.data.shape[0]
-	    dc = self.data.shape[1]
-	    nr = self.xdim*self.ydim
-	    nc = dc  # dim of data and neurons is the same
+		""" vsom_f -- vectorized and optimized version of the stochastic 
+					  SOM training algorithm written in Fortran90
+		"""
 
-	    # build and initialize the matrix holding the neurons
-	    cells = nr * nc        # no. of neurons times number of data dimensions
+	    	# some constants
+		dr = self.data.shape[0]
+		dc = self.data.shape[1]
+		nr = self.xdim*self.ydim
+		nc = dc  # dim of data and neurons is the same
 
-	    # vector with small init values for all neurons
-	    v = np.random.uniform(-1, 1, cells)
+	    	# build and initialize the matrix holding the neurons
+		cells = nr * nc        # no. of neurons times number of data dimensions
 
-	    # NOTE: each row represents a neuron, each column represents a dimension.
-	    neurons = np.transpose(np.reshape(v, (nc, nr)))  # rearrange the vector as matrix
+	    	# vector with small init values for all neurons
+		v = np.random.uniform(-1, 1, cells)
 
-	    neurons = vsom.vsom(neurons,
+	    	# NOTE: each row represents a neuron, each column represents a dimension.
+		neurons = np.transpose(np.reshape(v, (nc, nr)))  # rearrange the vector as matrix
+
+		neurons = vsom.vsom(neurons,
 	                        np.array(self.data),
 	                        self.xdim,
 	                        self.ydim,
@@ -210,9 +235,22 @@ class map:
 	                        dr,
 	                        dc)
 
-	    self.neurons = neurons
+		self.neurons = neurons
 
 	def convergence(self, conf_int=.95, k=50, verb=False, ks=False):
+		""" convergence -- the convergence index of a map
+		
+			Parameters:
+			- conf_int - the confidence interval of the quality assessment (default 95%)
+			- k - the number of samples used for the estimated topographic accuracy computation
+			- verb - if true reports the two convergence components separately, otherwise it will
+			         report the linear combination of the two
+			- ks - a switch, true for ks-test, false for standard var and means test
+			
+			Return
+			- return value is the convergence index
+		"""
+
 		if ks:
 			embed = self.embed_ks(conf_int, verb=False)
 		else:
@@ -226,6 +264,17 @@ class map:
 			return (0.5*embed + 0.5*topo_)		
 
 	def starburst(self, explicit=False, smoothing=2, merge_clusters=True,  merge_range=.25):
+		""" starburst -- compute and display the starburst representation of clusters
+			
+			parameters:
+			- explicit - controls the shape of the connected components
+			- smoothing - controls the smoothing level of the umat (NULL,0,>0)
+			- merge_clusters - a switch that controls if the starburst clusters are merged together
+			- merge_range - a range that is used as a percentage of a certain distance in the code
+			                to determine whether components are closer to their centroids or
+			                centroids closer to each other.
+		"""
+
 		umat = self.compute_umat(smoothing=smoothing)
 		self.plot_heat(umat,
 						explicit=explicit,
@@ -234,12 +283,32 @@ class map:
 						merge_range=merge_range)
 
 	def compute_umat(self, smoothing=None):
+		""" compute_umat -- compute the unified distance matrix
+		
+			parameters:
+			- smoothing - is either NULL, 0, or a positive floating point value controlling the
+			              smoothing of the umat representation
+			return:
+			- a matrix with the same x-y dims as the original map containing the umat values
+		"""
+
 		d = euclidean_distances(self.neurons, self.neurons)
 		umat = self.compute_heat(d, smoothing)
 
 		return umat
 
 	def compute_heat(self, d, smoothing=None):
+		""" compute_heat -- compute a heat value map representation of the given distance matrix
+			
+			parameters:
+			- d - a distance matrix computed via the 'dist' function
+			- smoothing - is either NULL, 0, or a positive floating point value controlling the
+			        	  smoothing of the umat representation
+			
+			return:
+			- a matrix with the same x-y dims as the original map containing the heat
+		"""
+
 		x = self.xdim
 		y = self.ydim
 		heat = np.matrix([[0.0] * y for _ in range(x)])
@@ -374,6 +443,19 @@ class map:
 		return heat
 
 	def plot_heat(self, heat, explicit=False, comp=True, merge=False, merge_range=0.25):
+		""" plot_heat -- plot a heat map based on a 'map', this plot also contains the connected
+		                 components of the map based on the landscape of the heat map
+
+			parameters:
+			- heat - is a 2D heat map of the map returned by 'map'
+			- explicit - controls the shape of the connected components
+			- comp - controls whether we plot the connected components on the heat map
+			- merge - controls whether we merge the starbursts together.
+			- merge_range - a range that is used as a percentage of a certain distance in the code
+			                to determine whether components are closer to their centroids or
+			                centroids closer to each other.
+		"""
+
 		umat = heat
 
 		x = self.xdim
@@ -450,6 +532,16 @@ class map:
 		plt.show()
 
 	def compute_centroids(self, heat, explicit=False):
+		""" compute_centroids -- compute the centroid for each point on the map
+		
+			parameters:
+			- heat - is a matrix representing the heat map representation
+			- explicit - controls the shape of the connected component
+			
+			return value:
+			- a list containing the matrices with the same x-y dims as the original map containing the centroid x-y coordinates
+		"""
+
 		xdim = self.xdim
 		ydim = self.ydim
 		centroid_x = np.matrix([[-1] * ydim for _ in range(xdim)])
@@ -458,6 +550,7 @@ class map:
 		heat = np.matrix(heat)
 
 		def compute_centroid(ix, iy):
+			# recursive function to find the centroid of a point on the map
 
 			if (centroid_x[ix, iy] > -1) and (centroid_y[ix, iy] > -1):
 				return {"bestx": centroid_x[ix, iy], "besty": centroid_y[ix, iy]}
@@ -754,6 +847,13 @@ class map:
 		return ne_centroid
 
 	def get_unique_centroids(self, centroids):
+		""" get_unique_centroids -- a function that computes a list of unique centroids from
+		                            a matrix of centroid locations.
+		
+			parameters:
+			- centroids - a matrix of the centroid locations in the map
+		"""
+
 		# get the dimensions of the map
 		xdim = self.xdim
 		ydim = self.ydim
@@ -778,6 +878,13 @@ class map:
 		return {"position_x": xlist, "position_y": ylist}
 
 	def distance_from_centroids(self, centroids, unique_centroids, heat):
+		""" distance_from_centroids -- A function to get the average distance from
+		                               centroid by cluster.
+			parameters:
+			- centroids - a matrix of the centroid locations in the map
+			- unique_centroids - a list of unique centroid locations
+			- heat - a unified distance matrix
+		"""
 
 		centroids_x_positions = unique_centroids['position_x']
 		centroids_y_positions = unique_centroids['position_y']
@@ -796,6 +903,15 @@ class map:
 		return within
 
 	def cluster_spread(self, x, y, umat, centroids):
+		""" cluster_spread -- Function to calculate the average distance in
+		                      one cluster given one centroid.
+		
+			parameters:
+			- x - x position of a unique centroid
+			- y - y position of a unique centroid
+			- umat - a unified distance matrix
+			- centroids - a matrix of the centroid locations in the map
+		"""
 
 		centroid_x = x
 		centroid_y = y
@@ -820,7 +936,15 @@ class map:
 		return average
 
 	def distance_between_clusters(self, centroids, unique_centroids, umat):
+		""" distance_between_clusters -- A function to compute the average pairwise
+		                                 distance between clusters.
 		
+			parameters:
+			- centroids - a matrix of the centroid locations in the map
+			- unique_centroids - a list of unique centroid locations
+			- umat - a unified distance matrix
+		"""
+
 		cluster_elements = self.list_clusters(centroids, unique_centroids, umat)
 
 		tmp_1 = np.zeros(shape=(max([len(cluster_elements[i]) for i in range(
@@ -854,6 +978,13 @@ class map:
 		return mat
 
 	def list_clusters(self, centroids, unique_centroids, umat):
+		""" list_clusters -- A function to get the clusters as a list of lists.
+		
+			parameters:
+			- centroids - a matrix of the centroid locations in the map
+			- unique_centroids - a list of unique centroid locations
+			- umat - a unified distance matrix
+		"""
 
 		centroids_x_positions = unique_centroids['position_x']
 		centroids_y_positions = unique_centroids['position_y']
@@ -869,7 +1000,16 @@ class map:
 		return cluster_list
 
 	def list_from_centroid(self, x, y, centroids, umat):
+		""" list_from_centroid -- A funtion to get all cluster elements
+		                          associated to one centroid.
 		
+			parameters:
+			- x - the x position of a centroid
+			- y - the y position of a centroid
+			- centroids - a matrix of the centroid locations in the map
+			- umat - a unified distance matrix
+		"""
+
 		centroid_x = x
 		centroid_y = y
 		xdim = self.xdim
@@ -888,6 +1028,14 @@ class map:
 		return cluster_list
 
 	def combine_decision(self, within_cluster_dist, distance_between_clusters, rang):
+		""" combine_decision -- A function that produces a boolean matrix
+		                        representing which clusters should be combined.
+		
+			parameters:
+			- within_cluster_dist - A list of the distances from centroid to cluster elements for all centroids
+			- distance_between_clusters - A list of the average pairwise distance between clusters
+			- range - The distance where the clusters are merged together.
+		"""
 
 		inter_cluster = distance_between_clusters
 		centroid_dist = within_cluster_dist
@@ -907,6 +1055,13 @@ class map:
 		return to_combine
 
 	def new_centroid(self, bmat, centroids, unique_centroids):
+		""" new_centroid -- A function to combine centroids based on matrix of booleans.
+		
+			parameters:
+			- bmat - a boolean matrix containing the centroids to merge
+			- centroids - a matrix of the centroid locations in the map
+			- unique_centroids - a list of unique centroid locations
+		"""
 
 		bmat_rows = bmat.shape[0]
 		bmat_columns = bmat.shape[1]
@@ -926,6 +1081,11 @@ class map:
 		return components
 
 	def swap_centroids(self, x1, y1, x2, y2, centroids):
+		""" swap_centroids -- A function that changes every instance of a centroid to
+		                      one that it should be combined with.
+			parameters:
+			- centroids - a matrix of the centroid locations in the map
+		"""
 
 		xdim = self.xdim
 		ydim = self.ydim
@@ -940,12 +1100,31 @@ class map:
 		return {"centroid_x": compn_x, "centroid_y": compn_y}
 
 	def embed(self, conf_int=.95, verb=False, ks=False):
+		""" embed -- evaluate the embedding of a map using the F-test and
+		             a Bayesian estimate of the variance in the training data.
+		
+			parameters:
+			- conf_int - the confidence interval of the convergence test (default 95%)
+			- verb - switch that governs the return value false: single convergence value
+			  		 is returned, true: a vector of individual feature congences is returned.
+			
+			- return value:
+			- return is the cembedding of the map (variance captured by the map so far)
+
+			Hint: 
+				  the embedding index is the variance of the training data captured by the map;
+			      maps with convergence of less than 90% are typically not trustworthy.  Of course,
+			      the precise cut-off depends on the noise level in your training data.
+		"""
+
 		if ks:
 			return self.embed_ks(conf_int, verb)
 		else:
 			return self.embed_vm(conf_int, verb)
 
 	def embed_ks(self, conf_int=0.95, verb=False):
+		""" embed_ks -- using the kolgomorov-smirnov test """
+
 		# map_df is a dataframe that contains the neurons
 		map_df = self.neurons
 
@@ -981,6 +1160,8 @@ class map:
 			return var_sum
 
 	def embed_vm(self, conf_int=.95, verb=False):
+		""" embed_vm -- using variance and mean tests  """
+
 		# map_df is a dataframe that contains the neurons
 		map_df = self.neurons
 
@@ -1085,6 +1266,19 @@ class map:
 			return var_sum
 
 	def topo(self, k=50, conf_int=.95, verb=False, interval=True):
+		""" topo -- measure the topographic accuracy of the map using sampling
+		
+			parameters:
+			- k - the number of samples used for the accuracy computation
+			- conf_int - the confidence interval of the accuracy test (default 95%)
+			- verb - switch that governs the return value, false: single accuracy value
+			  		 is returned, true: a vector of individual feature accuracies is returned.
+			- interval - a switch that controls whether the confidence interval is computed.
+			
+			- return value is the estimated topographic accuracy
+		"""
+		
+
 		# data.df is a matrix that contains the training data
 		data_df = self.data
 
@@ -1116,6 +1310,8 @@ class map:
 				return val
 
 	def bootstrap(self, conf_int, data_df, k, sample_acc_v):
+		""" bootstrap -- compute the topographic accuracies for the given confidence interval """
+
 		ix = int(100 - conf_int*100)
 		bn = 200
 
@@ -1135,6 +1331,9 @@ class map:
 		return {'lo': lo_val, 'hi': hi_val}	
 
 	def accuracy(self, sample, data_ix):
+		""" accuracy -- the topographic accuracy of a single sample is 1 is the best matching unit
+		             	and the second best matching unit are are neighbors otherwise it is 0
+		"""
 
 		o = self.best_match(sample, full=True)
 		best_ix = o[0]
@@ -1169,22 +1368,32 @@ class map:
 			return 0
 
 	def best_match(self, obs, full=False):
+		""" best_match -- given observation obs, return the best matching neuron """
 
 	   	# NOTE: replicate obs so that there are nr rows of obs
-	    obs_m = np.tile(obs, (self.neurons.shape[0], 1))
-	    diff = self.neurons - obs_m
-	    squ = diff * diff
-	    s = np.sum(squ, axis=1)
-	    d = np.sqrt(s)
-	    o = np.argsort(d)
+		obs_m = np.tile(obs, (self.neurons.shape[0], 1))
+		diff = self.neurons - obs_m
+		squ = diff * diff
+		s = np.sum(squ, axis=1)
+		d = np.sqrt(s)
+		o = np.argsort(d)
 
-	    if full:
-	        return o
-	    else:
-	        return o[0]
+		if full:
+			return o
+		else:
+			return o[0]
 
 	def significance(self, graphics=True, feature_labels=False):
-	  
+		""" significance -- compute the relative significance of each feature and plot it
+		
+			parameters:
+			- graphics - a switch that controls whether a plot is generated or not
+			- feature_labels - a switch to allow the plotting of feature names vs feature indices
+			
+			return value:
+			- a vector containing the significance for each feature  
+		"""
+
 		data_df = self.data
 		nfeatures = data_df.shape[1]
 
@@ -1225,7 +1434,14 @@ class map:
 			return prob_v
 
 	def projection(self):
-	
+		""" projection -- print the association of labels with map elements
+			
+			parameters:
+			
+			return values:
+			- a dataframe containing the projection onto the map for each observation
+		"""
+
 		labels_v = self.labels
 		x_v = []
 		y_v = []
@@ -1240,15 +1456,29 @@ class map:
 		return pd.DataFrame({'labels': labels_v, 'x': x_v, 'y': y_v})
 
 	def neuron(self, x, y):
+		""" neuron -- returns the contents of a neuron at (x,y) on the map as a vector
+		
+			parameters:
+			 - x - map x-coordinate of neuron
+			 - y - map y-coordinate of neuron
+		
+			return value:
+			 - a vector representing the neuron
+		"""
+
 		ix = self.rowix(x, y)
 		return self.neurons[ix]
 
 	def coordinate(self, rowix):
+		""" coordinate -- convert from a row index to a map xy-coordinate  """
+
 		x = (rowix) % self.xdim
 		y = (rowix) // self.xdim
 		return [x, y]
 
 	def rowix(self, x, y):
+		""" rowix -- convert from a map xy-coordinate to a row index  """
+
 		rix = x + y*self.xdim
 		return rix
 
