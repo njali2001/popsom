@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: popsom
+Version: 0.0.1
+Summary: A Popluation-based Self-Organizing Maps Package
+Home-page: https://github.com/njali2001/popsom
+Author: Li Yuan
+Author-email: li_yuan@my.uri.edu
+License: UNKNOWN
+Description: Self-Organizing Maps is a type of artificial neural network for the visualization of high-dimensional data.
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
