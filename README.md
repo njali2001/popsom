@@ -16,15 +16,73 @@ POPSOM is a Python library for dealing with population-base self-organizing maps
 
 `$ pip install -r requirements.txt`
 
-## Example 1: Iris data
-
 * Copy the popsom.py into python work dict.
 
-* Load popsom.py .
+
+## Example 1: Animal data
+
+
+* We have 13 different animals with 13 different features.
+
+|         | dove | hen  |duck  |owl   |eagle |dog   |wolf  |cat   |tiger |lion  |horse |cow   |
+| ------- |:----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:|
+| Small   |  1   |  1   |   1  |  1   |  0   |  0   |  0   |  1   |  0   |  0   |  0   |  0   | 
+| Medium  |  0   |  0   |   0  |  0   |  1   |  1   |  1   |  0   |  0   |  0   |  0   |  0   |
+| Big     |  0   |  0   |   0  |  0   |  0   |  0   |  0   |  0   |  1   |  1   |  1   |  1   |
+| 2 legs  |  1   |  1   |   1  |  1   |  1   |  0   |  0   |  0   |  0   |  0   |  0   |  0   | 
+| 4 legs  |  0   |  0   |   0  |  0   |  0   |  1   |  1   |  1   |  1   |  1   |  1   |  1   |
+| hair    |  0   |  0   |   0  |  0   |  0   |  1   |  1   |  1   |  1   |  1   |  1   |  1   |
+| Hooves  |  0   |  0   |   0  |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  1   |  1   | 
+| Mane    |  0   |  0   |   0  |  0   |  0   |  0   |  1   |  0   |  0   |  1   |  1   |  0   |
+| Feathers|  1   |  1   |   1  |  1   |  1   |  0   |  0   |  0   |  0   |  0   |  0   |  0   |
+| Hunt    |  0   |  0   |   0  |  1   |  1   |  0   |  1   |  1   |  1   |  1   |  0   |  0   | 
+| Run     |  0   |  0   |   0  |  0   |  0   |  1   |  1   |  0   |  1   |  1   |  1   |  0   |
+| Fly     |  1   |  0   |   1  |  1   |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   |
+| Swim    |  0   |  0   |   1  |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   | 
+
+
+* Load popsom.py.
 
 ```python
 import popsom as som  
 ```
+
+* Prepare the data for training.
+
+```python
+animal = ['dove','hen','duck','owl','eagle','fox','dog','wolf','cat','tiger','lion','horse','cow']
+attribute = [[1,0,0,1,0,0,0,0,1,0,0,1,0],
+             [1,0,0,1,0,0,0,0,1,0,0,0,0],
+             [1,0,0,1,0,0,0,0,1,0,0,1,1],
+             [1,0,0,1,0,0,0,0,1,1,0,1,0],
+             [0,1,0,1,0,0,0,0,1,1,0,0,0],
+             [0,1,0,1,0,0,0,0,1,1,0,0,0],
+             [0,1,0,0,1,1,0,0,0,0,1,0,0],
+             [0,1,0,0,1,1,0,1,0,1,1,0,0],
+             [1,0,0,0,1,1,0,0,0,1,0,0,0],
+             [0,0,1,0,1,1,0,0,0,1,1,0,0],
+             [0,0,1,0,1,1,0,1,0,1,1,0,0],
+             [0,0,1,0,1,1,1,1,0,0,1,0,0],
+             [0,0,1,0,1,1,1,0,0,0,0,0,0]]
+
+attr = pd.DataFrame(attribute)
+attr.columns = ['small','medium','big','2 legs','4 legs','hair','hooves','mane','feathers','hunt','run','fly','swim']
+m = som.map(xdim=10,ydim=5)
+```
+
+* Training the data.
+```python
+m.fit(attr,animal)
+```
+
+* Compute and display the starburst representation of clusters
+```python
+m.starburst()
+```
+![animal](https://user-images.githubusercontent.com/8847441/46828059-3daf6d80-cd68-11e8-86c8-9071400cafcb.png)
+
+
+## Example 2: Iris data
 
 * Load pandas and sklearn for importing iris dataset.
 
@@ -105,41 +163,6 @@ m.projection()
 ```python
 m.neuron(6,3)
 ```
-
-## Example 2: Animal data
-
-* We have 13 different animals with 13 different features.
-```python
-animal = ['dove','hen','duck','owl','eagle','fox','dog','wolf','cat','tiger','lion','horse','cow']
-attribute = [[1,0,0,1,0,0,0,0,1,0,0,1,0],
-             [1,0,0,1,0,0,0,0,1,0,0,0,0],
-             [1,0,0,1,0,0,0,0,1,0,0,1,1],
-             [1,0,0,1,0,0,0,0,1,1,0,1,0],
-             [0,1,0,1,0,0,0,0,1,1,0,0,0],
-             [0,1,0,1,0,0,0,0,1,1,0,0,0],
-             [0,1,0,0,1,1,0,0,0,0,1,0,0],
-             [0,1,0,0,1,1,0,1,0,1,1,0,0],
-             [1,0,0,0,1,1,0,0,0,1,0,0,0],
-             [0,0,1,0,1,1,0,0,0,1,1,0,0],
-             [0,0,1,0,1,1,0,1,0,1,1,0,0],
-             [0,0,1,0,1,1,1,1,0,0,1,0,0],
-             [0,0,1,0,1,1,1,0,0,0,0,0,0]]
-
-attr = pd.DataFrame(attribute)
-attr.columns = ['small','medium','big','2 legs','4 legs','hair','hooves','mane','feathers','hunt','run','fly','swim']
-m = som.map(xdim=10,ydim=5)
-```
-
-* Training the data.
-```python
-m.fit(attr,animal)
-```
-
-* Compute and display the starburst representation of clusters
-```python
-m.starburst()
-```
-![animal](https://user-images.githubusercontent.com/8847441/46828059-3daf6d80-cd68-11e8-86c8-9071400cafcb.png)
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
