@@ -23,10 +23,9 @@ POPSOM is a Python library for dealing with population-base self-organizing maps
 
 ## Example 1: Animal data
 
+* We have 13 different kinds of animals with 13 different features.
 
-* We have 13 different animals with 13 different features.
-
-|             | dove | hen  |duck  |owl   |eagle |dog   |wolf  |cat   |tiger |lion  |horse |cow   |
+|             | dove | hen  | duck | owl  |eagle | dog  | wolf | cat  |tiger | lion |horse | cow  |
 | ----------- |:----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:|
 | **Small**   |  1   |  1   |   1  |  1   |  0   |  0   |  0   |  1   |  0   |  0   |  0   |  0   | 
 | **Medium**  |  0   |  0   |   0  |  0   |  1   |  1   |  1   |  0   |  0   |  0   |  0   |  0   |
