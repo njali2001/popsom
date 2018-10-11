@@ -82,6 +82,13 @@ m.topo()
 ```python
 m.starburst()
 ```
+![starburst](https://user-images.githubusercontent.com/8847441/46819587-1fd70e00-cd52-11e8-9959-1698a2119b32.png)
+
+* Plot that shows the marginal probability distribution of the neurons and data
+```python
+m.marginal(0)
+```
+
 
 
 ## License
