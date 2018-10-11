@@ -41,7 +41,7 @@ iris 	= datasets.load_iris()
 labels 	= iris.target
 data 	= pd.DataFrame(iris.data[:, :4])
 data.columns = iris.feature_names
-m = som.map(xdim=10,ydim=5,train=1000)   # xdim 
+m = som.map(xdim=10, ydim=5, train=1000)   # xdim 
 
 ```
 
