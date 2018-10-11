@@ -91,18 +91,19 @@ iris 	= datasets.load_iris()
 labels 	= iris.target
 data 	= pd.DataFrame(iris.data[:, :4])
 data.columns = iris.feature_names
-m = som.map(xdim=10, ydim=5, train=1000)   # xdim 
 ```
 
 * Initiate the model.
 
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
-# xdim,ydim - the dimensions of the map
-# alpha - the learning rate, should be a positive non-zero real number
-# train - number of training iterations
-# norm - normalize the input data space
 ```
+> xdim,ydim - the dimensions of the map
+> alpha - the learning rate, should be a positive non-zero real number
+> train - number of training iterations
+> norm - normalize the input data space
+
+
 * Training the data.
 
 ```python
