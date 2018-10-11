@@ -112,7 +112,7 @@ m.fit(data,labels)
 ```python
 m.significance()
 ```
-<img src="image/significance.png"/>
+<img src="image/sign.png"/>
 
 * Compute the convergence index of a map
 ```python
@@ -132,7 +132,7 @@ m.topo()
 ```python
 m.starburst()
 ```
-![starburst](https://user-images.githubusercontent.com/8847441/46819587-1fd70e00-cd52-11e8-9959-1698a2119b32.png)
+<img src="image/iris.png"/>
 
 * Plot that shows the marginal probability distribution of the neurons and data
 ```python
