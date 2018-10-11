@@ -41,13 +41,9 @@ POPSOM is a Python library for dealing with population-base self-organizing maps
 | Swim    |  0   |  0   |   1  |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   | 
 
 
-* Load popsom.py.
+* Load popsom, pandas and sklearn libraries.
 ```python
 import popsom as som  
-```
-
-* Load pandas and sklearn for importing iris dataset.
-```python
 import pandas as pd
 from   sklearn import datasets
 ```
