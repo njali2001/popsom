@@ -84,7 +84,7 @@ m.fit(attr,animal)
 ```python
 m.starburst()
 ```
-![animal](https://user-images.githubusercontent.com/8847441/46828059-3daf6d80-cd68-11e8-86c8-9071400cafcb.png)
+<img src="animal_1.png" width="600" />
 
 
 ## Example 2: Iris data
