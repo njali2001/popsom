@@ -84,7 +84,7 @@ m.fit(attr,animal)
 ```python
 m.starburst()
 ```
-<img src="image/animal_1.png" width="600" />
+<img src="image/animal_1.png"/>
 
 
 ## Example 2: Iris data
