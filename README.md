@@ -71,7 +71,7 @@ attr = pd.DataFrame(attribute)
 attr.columns = ['small','medium','big','2 legs','4 legs','hair','hooves','mane','feathers','hunt','run','fly','swim']
 ```
 
-* Initiate the model.
+* Initialize the model.
 ```python
 m = som.map(xdim=10,ydim=5)
 ```
@@ -99,7 +99,7 @@ data 	= pd.DataFrame(iris.data[:, :4])
 data.columns = iris.feature_names
 ```
 
-* Initiate the model.
+* Initialize the model.
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
@@ -163,7 +163,7 @@ m.projection()
 m.neuron(6,3)
 ```
 
-## Thesis about this work
+## Reference Thesis
 Yuan, Li, "[Implementation of Self-Organizing Maps with Python](https://digitalcommons.uri.edu/theses/1244)" (2018). Open Access Master's Theses. Paper 1244.
 
 ## License
