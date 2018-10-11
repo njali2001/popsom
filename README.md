@@ -112,7 +112,7 @@ m.fit(data,labels)
 ```python
 m.significance()
 ```
-![significance](https://user-images.githubusercontent.com/8847441/46817774-b228e300-cd4d-11e8-9d24-c3be95be3395.png)
+<img src="image/significance.png"/>
 
 * Compute the convergence index of a map
 ```python
