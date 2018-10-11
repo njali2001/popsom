@@ -66,8 +66,7 @@ m.fit(data,labels)
 m.significance()
 ```
 
-![Image of Yaktocat]
-(image/significance.png?raw=true "Significance")
+![significance](https://user-images.githubusercontent.com/8847441/46817774-b228e300-cd4d-11e8-9d24-c3be95be3395.png)
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
