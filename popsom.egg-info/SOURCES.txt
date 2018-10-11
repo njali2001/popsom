@@ -1,8 +1,0 @@
-README.md
-setup.py
-popsom/__init__.py
-popsom/popsom.py
-popsom.egg-info/PKG-INFO
-popsom.egg-info/SOURCES.txt
-popsom.egg-info/dependency_links.txt
-popsom.egg-info/top_level.txt
