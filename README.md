@@ -98,14 +98,8 @@ data.columns = iris.feature_names
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
-> xdim,ydim - the dimensions of the map
-> alpha - the learning rate, should be a positive non-zero real number
-> train - number of training iterations
-> norm - normalize the input data space
-
 
 * Training the data.
-
 ```python
 m.fit(data,labels)
 ```
@@ -143,10 +137,11 @@ m.marginal(1)
 m.marginal(2)
 m.marginal(3)
 ```
-![figure_1](https://user-images.githubusercontent.com/8847441/46819688-5f9df580-cd52-11e8-85d1-5b650702f756.png)
-![figure_2](https://user-images.githubusercontent.com/8847441/46819689-5f9df580-cd52-11e8-856a-bb6e6d36c088.png)
-![figure_3](https://user-images.githubusercontent.com/8847441/46819686-5f9df580-cd52-11e8-90d2-4a433b7dc6ec.png)
-![figure_4](https://user-images.githubusercontent.com/8847441/46819687-5f9df580-cd52-11e8-84f4-01f2e736795a.png)
+:-------------------------:|:-------------------------:
+![figure_1](https://user-images.githubusercontent.com/8847441/46819688-5f9df580-cd52-11e8-85d1-5b650702f756.png)  |  ![figure_2](https://user-images.githubusercontent.com/8847441/46819689-5f9df580-cd52-11e8-856a-bb6e6d36c088.png)
+![figure_3](https://user-images.githubusercontent.com/8847441/46819686-5f9df580-cd52-11e8-90d2-4a433b7dc6ec.png)  |  ![figure_4](https://user-images.githubusercontent.com/8847441/46819687-5f9df580-cd52-11e8-84f4-01f2e736795a.png)
+
+
 
 * Print the association of labels with map elements
 ```python
