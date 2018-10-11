@@ -127,7 +127,7 @@ attribute = [[1,0,0,1,0,0,0,0,1,0,0,1,0],
 
 attr = pd.DataFrame(attribute)
 attr.columns = ['small','medium','big','2 legs','4 legs','hair','hooves','mane','feathers','hunt','run','fly','swim']
-m = som.map(attr,animal,xdim=10,ydim=10)
+m = som.map(xdim=10,ydim=10)
 ```
 
 * Training the data.
