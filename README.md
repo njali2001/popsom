@@ -96,6 +96,50 @@ m.marginal(3)
 ![figure_3](https://user-images.githubusercontent.com/8847441/46819686-5f9df580-cd52-11e8-90d2-4a433b7dc6ec.png)
 ![figure_4](https://user-images.githubusercontent.com/8847441/46819687-5f9df580-cd52-11e8-84f4-01f2e736795a.png)
 
+* Print the association of labels with map elements
+```python
+m.projection()
+```
+
+* Returns the contents of a neuron at (x,y) on the map as a vector
+```python
+m.neuron(6,3)
+```
+
+## Example 2: Animal data
+
+* We have 13 different animals with 13 different features.
+```python
+animal = ['dove','hen','duck','owl','eagle','fox','dog','wolf','cat','tiger','lion','horse','cow']
+attribute = [[1,0,0,1,0,0,0,0,1,0,0,1,0],
+             [1,0,0,1,0,0,0,0,1,0,0,0,0],
+             [1,0,0,1,0,0,0,0,1,0,0,1,1],
+             [1,0,0,1,0,0,0,0,1,1,0,1,0],
+             [0,1,0,1,0,0,0,0,1,1,0,0,0],
+             [0,1,0,1,0,0,0,0,1,1,0,0,0],
+             [0,1,0,0,1,1,0,0,0,0,1,0,0],
+             [0,1,0,0,1,1,0,1,0,1,1,0,0],
+             [1,0,0,0,1,1,0,0,0,1,0,0,0],
+             [0,0,1,0,1,1,0,0,0,1,1,0,0],
+             [0,0,1,0,1,1,0,1,0,1,1,0,0],
+             [0,0,1,0,1,1,1,1,0,0,1,0,0],
+             [0,0,1,0,1,1,1,0,0,0,0,0,0]]
+
+attr = pd.DataFrame(attribute)
+attr.columns = ['small','medium','big','2 legs','4 legs','hair','hooves','mane','feathers','hunt','run','fly','swim']
+m = som.map(attr,animal,xdim=10,ydim=10)
+```
+
+* Training the data.
+```python
+m.fit(attr,animal)
+```
+
+* Compute and display the starburst representation of clusters
+```python
+m.starburst()
+```
+
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
