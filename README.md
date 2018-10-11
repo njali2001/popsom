@@ -139,13 +139,13 @@ m.marginal(3)
 ```
 
 <p float="center">
-  <img src="https://user-images.githubusercontent.com/8847441/46819688-5f9df580-cd52-11e8-85d1-5b650702f756.png" width="600" />
-  <img src="https://user-images.githubusercontent.com/8847441/46819689-5f9df580-cd52-11e8-856a-bb6e6d36c088.png" width="600" /> 
+  <img src="https://user-images.githubusercontent.com/8847441/46819688-5f9df580-cd52-11e8-85d1-5b650702f756.png" width="500" />
+  <img src="https://user-images.githubusercontent.com/8847441/46819689-5f9df580-cd52-11e8-856a-bb6e6d36c088.png" width="500" /> 
 </p>
 
 <p float="center">
-  <img src="https://user-images.githubusercontent.com/8847441/46819686-5f9df580-cd52-11e8-90d2-4a433b7dc6ec.png" width="600" />
-  <img src="https://user-images.githubusercontent.com/8847441/46819687-5f9df580-cd52-11e8-84f4-01f2e736795a.png" width="600" /> 
+  <img src="https://user-images.githubusercontent.com/8847441/46819686-5f9df580-cd52-11e8-90d2-4a433b7dc6ec.png" width="500" />
+  <img src="https://user-images.githubusercontent.com/8847441/46819687-5f9df580-cd52-11e8-84f4-01f2e736795a.png" width="500" /> 
 </p>
 
 * Print the association of labels with map elements
