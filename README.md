@@ -16,7 +16,7 @@ POPSOM is a Python library for dealing with population-base self-organizing maps
 
 `$ pip install -r requirements.txt`
 
-## Example
+## Example 1: Iris data
 
 * Copy the popsom.py into python work dict.
 
@@ -25,7 +25,6 @@ POPSOM is a Python library for dealing with population-base self-organizing maps
 ```python
 import popsom as som  
 ```
-
 
 * Load pandas and sklearn for importing iris dataset.
 
@@ -42,18 +41,16 @@ labels 	= iris.target
 data 	= pd.DataFrame(iris.data[:, :4])
 data.columns = iris.feature_names
 m = som.map(xdim=10, ydim=5, train=1000)   # xdim 
-
 ```
 
 * Initiate the model.
 
-- xdim,ydim - the dimensions of the map
-- alpha - the learning rate, should be a positive non-zero real number
-- train - number of training iterations
-- norm - normalize the input data space
-
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
+# xdim,ydim - the dimensions of the map
+# alpha - the learning rate, should be a positive non-zero real number
+# train - number of training iterations
+# norm - normalize the input data space
 ```
 * Training the data.
 
@@ -66,6 +63,26 @@ m.fit(data,labels)
 m.significance()
 ```
 ![significance](https://user-images.githubusercontent.com/8847441/46817774-b228e300-cd4d-11e8-9d24-c3be95be3395.png)
+
+* Compute the convergence index of a map
+```python
+m.convergence()
+```
+* Evaluate the embedding of a map using the F-test and a Bayesian estimate of the variance in the training data
+```python
+m.embed()
+```
+
+* Measure the topographic accuracy of the map using sampling
+```python
+m.topo()
+```
+
+* Compute and display the starburst representation of clusters
+```python
+m.starburst()
+```
+
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
