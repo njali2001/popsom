@@ -1,6 +1,6 @@
 # POPSOM ![CI status](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-POPSOM is a Python library for dealing with population-base self-organizing maps.
+POPSOM is a Python library for dealing with population-base self-organizing maps. This work was derived from [R-based POPSOM](https://github.com/lutzhamel/popsom) which developed and maintained by [Dr. Lutz Hamel](https://www.cs.uri.edu/about-us/people/lutz-hamel/) and his former students. 
 
 ## Installation
 
@@ -16,7 +16,9 @@ POPSOM is a Python library for dealing with population-base self-organizing maps
 
 `$ pip install -r requirements.txt`
 
+### How to install
 * Copy the popsom.py into python work dict.
+
 
 
 ## Example 1: Animal data
@@ -67,10 +69,14 @@ attribute = [[1,0,0,1,0,0,0,0,1,0,0,1,0],
 
 attr = pd.DataFrame(attribute)
 attr.columns = ['small','medium','big','2 legs','4 legs','hair','hooves','mane','feathers','hunt','run','fly','swim']
+```
+
+* Initiate the model.
+```python
 m = som.map(xdim=10,ydim=5)
 ```
 
-* Training the data.
+* Train the data.
 ```python
 m.fit(attr,animal)
 ```
@@ -94,7 +100,6 @@ data.columns = iris.feature_names
 ```
 
 * Initiate the model.
-
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
@@ -157,6 +162,9 @@ m.projection()
 ```python
 m.neuron(6,3)
 ```
+
+## Thesis about this work
+Yuan, Li, "[Implementation of Self-Organizing Maps with Python](https://digitalcommons.uri.edu/theses/1244)" (2018). Open Access Master's Theses. Paper 1244.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
