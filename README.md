@@ -139,7 +139,7 @@ m.fit(attr,animal)
 ```python
 m.starburst()
 ```
-
+![animal](https://user-images.githubusercontent.com/8847441/46828059-3daf6d80-cd68-11e8-86c8-9071400cafcb.png)
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
