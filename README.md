@@ -42,13 +42,17 @@ POPSOM is a Python library for dealing with population-base self-organizing maps
 
 
 * Load popsom.py.
-
 ```python
 import popsom as som  
 ```
 
-* Prepare the data for training.
+* Load pandas and sklearn for importing iris dataset.
+```python
+import pandas as pd
+from   sklearn import datasets
+```
 
+* Prepare the data for training.
 ```python
 animal = ['dove','hen','duck','owl','eagle','fox','dog','wolf','cat','tiger','lion','horse','cow']
 attribute = [[1,0,0,1,0,0,0,0,1,0,0,1,0],
@@ -83,13 +87,6 @@ m.starburst()
 
 
 ## Example 2: Iris data
-
-* Load pandas and sklearn for importing iris dataset.
-
-```python
-import pandas as pd
-from   sklearn import datasets
-```
 
 * Prepare the iris data for training.
 
