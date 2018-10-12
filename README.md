@@ -1,6 +1,6 @@
 # POPSOM ![CI status](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-POPSOM is a Python library for dealing with population-base self-organizing maps. This work was derived from [R-based POPSOM](https://github.com/lutzhamel/popsom) which developed and maintained by [Dr. Lutz Hamel](https://www.cs.uri.edu/about-us/people/lutz-hamel/) and his former students. 
+POPSOM is a Python library for dealing with population-base Self-Organizing Maps. This work was derived from [R-based POPSOM](https://github.com/lutzhamel/popsom) which developed and maintained by [Dr. Lutz Hamel](https://www.cs.uri.edu/about-us/people/lutz-hamel/) and his former students. 
 
 ## Installation
 
