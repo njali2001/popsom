@@ -103,7 +103,7 @@ data.columns = iris.feature_names
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
 
-* Training the data.
+* Train the data.
 ```python
 m.fit(data,labels)
 ```
