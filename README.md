@@ -163,7 +163,7 @@ m.neuron(6,3)
 ```
 
 ## Reference Thesis
-Yuan, Li, "[Implementation of Self-Organizing Maps with Python](https://digitalcommons.uri.edu/theses/1244)" (2018).
+[Yuan, Li](mailto:li_yuan@my.uri.edu), "[Implementation of Self-Organizing Maps with Python](https://digitalcommons.uri.edu/theses/1244)" (2018).
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
