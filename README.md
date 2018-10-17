@@ -102,6 +102,12 @@ data.columns = iris.feature_names
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
+> parameters:
+- xdim,ydim - the dimensions of the map
+- alpha - the learning rate, should be a positive non-zero real number
+- train - number of training iterations
+- norm - normalize the input data space
+
 
 * Train the data.
 ```python
