@@ -102,7 +102,7 @@ data.columns = iris.feature_names
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
-> parameters:
+> Parameters:
   - xdim,ydim - the dimensions of the map
   - alpha - the learning rate, should be a positive non-zero real number
   - train - number of training iterations
@@ -113,6 +113,10 @@ m = som.map(xdim=10,ydim=5,train=1000,norm=False)
 ```python
 m.fit(data,labels)
 ```
+> Parameters:
+  - data - a dataframe where each row contains an unlabeled training instance
+	- labels - a vector or dataframe with one label for each observation in data
+
 
 **Compute the relative significance of each feature and plot it**
 ```python
@@ -120,22 +124,60 @@ m.significance()
 ```
 <img src="image/sign.png"/>
 
+> Parameters:
+  - graphics - a switch that controls whether a plot is generated or not
+	- feature_labels - a switch to allow the plotting of feature names vs feature indices
+
+
 **Compute the convergence index of a map**
 ```python
 m.convergence()
 1.0
 ```
+> parameters:
+	- k - the number of samples used for the accuracy computation
+	- conf_int - the confidence interval of the accuracy test (default 95%)
+	- verb - switch that governs the return value, false: single accuracy value is returned, true: a vector of individual feature accuracies is returned.
+	- interval - a switch that controls whether the confidence interval is computed.
+			
+> Return:
+	- return value is the estimated topographic accuracy.
+
+
+
 **Evaluate the embedding of a map using the F-test and a Bayesian estimate of the variance in the training data**
 ```python
 m.embed()
 1.0
 ```
+> Parameters:
+	- conf_int - the confidence interval of the convergence test (default 95%)
+	- verb - switch that governs the return value false: single convergence value is returned, true: a vector of individual feature congences is returned.
+			
+> Return value:
+	- return is the cembedding of the map (variance captured by the map so far)
+
+> Hint: 
+	- the embedding index is the variance of the training data captured by the map;
+  - maps with convergence of less than 90% are typically not trustworthy.  
+  - Of course, the precise cut-off depends on the noise level in your training data.
+
+
 
 **Measure the topographic accuracy of the map using sampling**
 ```python
 m.topo()
 {'val': 0.97999999999999998, 'lo': 0.93999999999999995, 'hi': 1.0}
 ```
+> Parameters:
+	- conf_int - the confidence interval of the quality assessment (default 95%)
+	- k - the number of samples used for the estimated topographic accuracy computation
+	- verb - if true reports the two convergence components separately, otherwise it will report the linear combination of the two
+	- ks - a switch, true for ks-test, false for standard var and means test
+			
+> Return:
+	- return value is the convergence index
+
 
 **Compute and display the starburst representation of clusters**
 ```python
