@@ -117,15 +117,18 @@ m.significance()
 * Compute the convergence index of a map
 ```python
 m.convergence()
+1.0
 ```
 * Evaluate the embedding of a map using the F-test and a Bayesian estimate of the variance in the training data
 ```python
 m.embed()
+1.0
 ```
 
 * Measure the topographic accuracy of the map using sampling
 ```python
 m.topo()
+{'val': 0.97999999999999998, 'lo': 0.93999999999999995, 'hi': 1.0}
 ```
 
 * Compute and display the starburst representation of clusters
@@ -155,11 +158,30 @@ m.marginal(3)
 * Print the association of labels with map elements
 ```python
 m.projection()
+     labels  x  y
+0         0  9  2
+1         0  8  0
+2         0  9  1
+3         0  8  0
+4         0  9  2
+5         0  8  4
+6         0  8  1
+..      ... .. ..
+141       2  0  2
+142       2  2  4
+143       2  0  1
+144       2  0  4
+145       2  0  2
+146       2  2  2
+147       2  1  2
+148       2  0  4
+149       2  2  4
 ```
 
 * Returns the contents of a neuron at (x,y) on the map as a vector
 ```python
 m.neuron(6,3)
+array([ 5.21176518,  2.61068045,  3.63423014,  1.18464818])
 ```
 
 ## Reference Thesis
