@@ -23,7 +23,7 @@ POPSOM is a Python library for dealing with population-base Self-Organizing Maps
 
 ## Example 1: Animal data
 
-** We have 13 different kinds of animals with 13 different features. **
+**We have 13 different kinds of animals with 13 different features.**
 
 |             | dove | hen  | duck | owl  |eagle | dog  | wolf | cat  |tiger | lion |horse | cow  |
 | ----------- |:----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:| ----:|
@@ -42,7 +42,7 @@ POPSOM is a Python library for dealing with population-base Self-Organizing Maps
 | **Swim**    |  0   |  0   |   1  |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   | 
 
 
-__ Load popsom, pandas and sklearn libraries. __
+__Load popsom, pandas and sklearn libraries.__
 ```python
 import popsom as som  
 import pandas as pd
