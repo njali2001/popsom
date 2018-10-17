@@ -221,6 +221,7 @@ m.marginal(3)
   <img src="image/Figure_4.png" width="400" /> 
 </p>
 
+
 **10. Print the association of labels with map elements**
 ```python
 m.projection()
