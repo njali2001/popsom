@@ -89,7 +89,7 @@ m.starburst()
 
 ## Example 2: Iris data
 
-**Prepare the iris data for training.**
+**1. Prepare the iris data for training.**
 
 ```python
 iris 	= datasets.load_iris()
@@ -98,7 +98,7 @@ data 	= pd.DataFrame(iris.data[:, :4])
 data.columns = iris.feature_names
 ```
 
-**Initialize the model.**
+**2. Initialize the model.**
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
@@ -110,7 +110,7 @@ m = som.map(xdim=10,ydim=5,train=1000,norm=False)
   - norm - normalize the input data space
 
 
-**Train the data.**
+**3. Train the data.**
 ```python
 m.fit(data,labels)
 ```
@@ -120,7 +120,7 @@ m.fit(data,labels)
   - labels - a vector or dataframe with one label for each observation in data
 
 
-**Compute the relative significance of each feature and plot it**
+**4. Compute the relative significance of each feature and plot it**
 ```python
 m.significance()
 ```
@@ -134,7 +134,7 @@ m.significance()
 
 
 
-**Compute the convergence index of a map**
+**5. Compute the convergence index of a map**
 ```python
 m.convergence()
 1.0
@@ -150,7 +150,7 @@ m.convergence()
   - return value is the estimated topographic accuracy.
 
 
-**Evaluate the embedding of a map using the F-test and a Bayesian estimate of the variance in the training data**
+**6. Evaluate the embedding of a map using the F-test and a Bayesian estimate of the variance in the training data**
 ```python
 m.embed()
 1.0
@@ -170,7 +170,7 @@ m.embed()
 
 
 
-**Measure the topographic accuracy of the map using sampling**
+**7. Measure the topographic accuracy of the map using sampling**
 ```python
 m.topo()
 {'val': 0.97999999999999998, 'lo': 0.93999999999999995, 'hi': 1.0}
@@ -186,7 +186,7 @@ m.topo()
   - return value is the convergence index
 
 
-**Compute and display the starburst representation of clusters**
+**8. Compute and display the starburst representation of clusters**
 ```python
 m.starburst()
 ```
@@ -199,7 +199,7 @@ m.starburst()
 
 <img src="image/iris.png"/>
 
-**Plot that shows the marginal probability distribution of the neurons and data**
+**9. Plot that shows the marginal probability distribution of the neurons and data**
 ```python
 m.marginal(0)
 m.marginal(1)
@@ -221,7 +221,7 @@ m.marginal(3)
   <img src="image/Figure_4.png" width="400" /> 
 </p>
 
-**Print the association of labels with map elements**
+**10. Print the association of labels with map elements**
 ```python
 m.projection()
      labels  x  y
@@ -248,7 +248,7 @@ m.projection()
   - a dataframe containing the projection onto the map for each observation.
 
 
-**Returns the contents of a neuron at (x,y) on the map as a vector**
+**11. Returns the contents of a neuron at (x,y) on the map as a vector**
 ```python
 m.neuron(6,3)
 array([ 5.21176518,  2.61068045,  3.63423014,  1.18464818])
