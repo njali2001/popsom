@@ -102,6 +102,7 @@ data.columns = iris.feature_names
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
+
 > Parameters:
   - xdim,ydim - the dimensions of the map
   - alpha - the learning rate, should be a positive non-zero real number
@@ -113,6 +114,7 @@ m = som.map(xdim=10,ydim=5,train=1000,norm=False)
 ```python
 m.fit(data,labels)
 ```
+
 > Parameters:
   - data - a dataframe where each row contains an unlabeled training instance
   - labels - a vector or dataframe with one label for each observation in data
@@ -122,11 +124,14 @@ m.fit(data,labels)
 ```python
 m.significance()
 ```
-<img src="image/sign.png"/>
 
 > Parameters:
   - graphics - a switch that controls whether a plot is generated or not
   - feature_labels - a switch to allow the plotting of feature names vs feature indices
+
+
+<img src="image/sign.png"/>
+
 
 
 **Compute the convergence index of a map**
@@ -134,6 +139,7 @@ m.significance()
 m.convergence()
 1.0
 ```
+
 > parameters:
   - k - the number of samples used for the accuracy computation
   - conf_int - the confidence interval of the accuracy test (default 95%)
@@ -149,6 +155,7 @@ m.convergence()
 m.embed()
 1.0
 ```
+
 > Parameters:
   - conf_int - the confidence interval of the convergence test (default 95%)
   - verb - switch that governs the return value false: single convergence value is returned, true: a vector of individual feature congences is returned.
@@ -168,20 +175,28 @@ m.embed()
 m.topo()
 {'val': 0.97999999999999998, 'lo': 0.93999999999999995, 'hi': 1.0}
 ```
+
 > Parameters:
-	- conf_int - the confidence interval of the quality assessment (default 95%)
-	- k - the number of samples used for the estimated topographic accuracy computation
-	- verb - if true reports the two convergence components separately, otherwise it will report the linear combination of the two
-	- ks - a switch, true for ks-test, false for standard var and means test
+  - conf_int - the confidence interval of the quality assessment (default 95%)
+  - k - the number of samples used for the estimated topographic accuracy computation
+  - verb - if true reports the two convergence components separately, otherwise it will report the linear combination of the two
+  - ks - a switch, true for ks-test, false for standard var and means test
 			
 > Return:
-	- return value is the convergence index
+  - return value is the convergence index
 
 
 **Compute and display the starburst representation of clusters**
 ```python
 m.starburst()
 ```
+
+> Parameters:
+  - explicit - controls the shape of the connected components
+  - smoothing - controls the smoothing level of the umat (NULL,0,>0)
+  - merge_clusters - a switch that controls if the starburst clusters are merged together
+  - merge_range - a range that is used as a percentage of a certain distance in the code to determine whether components are closer to their centroids or centroids closer to each other.
+
 <img src="image/iris.png"/>
 
 **Plot that shows the marginal probability distribution of the neurons and data**
@@ -191,6 +206,10 @@ m.marginal(1)
 m.marginal(2)
 m.marginal(3)
 ```
+
+> Parameters:
+  - marginal is the name of a training data frame dimension or index
+
 
 <p float="left">
   <img src="image/Figure_1.png" width="400" />
@@ -225,11 +244,23 @@ m.projection()
 149       2  2  4
 ```
 
+> Return:
+  - a dataframe containing the projection onto the map for each observation.
+
+
 **Returns the contents of a neuron at (x,y) on the map as a vector**
 ```python
 m.neuron(6,3)
 array([ 5.21176518,  2.61068045,  3.63423014,  1.18464818])
 ```
+
+> Parameters:
+  - x - map x-coordinate of neuron.
+  - y - map y-coordinate of neuron.
+		
+> Return:
+  - a vector representing the neuron.
+
 
 ## Reference Thesis
 [Yuan, Li](mailto:li_yuan@my.uri.edu), "[Implementation of Self-Organizing Maps with Python](https://digitalcommons.uri.edu/theses/1244)" (2018).
