@@ -42,14 +42,14 @@ POPSOM is a Python library for dealing with population-base Self-Organizing Maps
 | **Swim**    |  0   |  0   |   1  |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   |  0   | 
 
 
-__Load popsom, pandas and sklearn libraries.__
+**Load popsom, pandas and sklearn libraries.**
 ```python
 import popsom as som  
 import pandas as pd
 from   sklearn import datasets
 ```
 
-* Prepare the data for training.
+**Prepare the data for training.**
 ```python
 animal = ['dove','hen','duck','owl','eagle','fox','dog','wolf','cat','tiger','lion','horse','cow']
 attribute = [[1,0,0,1,0,0,0,0,1,0,0,1,0],
@@ -70,17 +70,17 @@ attr = pd.DataFrame(attribute)
 attr.columns = ['small','medium','big','2 legs','4 legs','hair','hooves','mane','feathers','hunt','run','fly','swim']
 ```
 
-* Initialize the model.
+**Initialize the model.**
 ```python
 m = som.map(xdim=10,ydim=5)
 ```
 
-* Train the data.
+**Train the data.**
 ```python
 m.fit(attr,animal)
 ```
 
-* Compute and display the starburst representation of clusters
+**Compute and display the starburst representation of clusters**
 ```python
 m.starburst()
 ```
@@ -89,7 +89,7 @@ m.starburst()
 
 ## Example 2: Iris data
 
-* Prepare the iris data for training.
+**Prepare the iris data for training.**
 
 ```python
 iris 	= datasets.load_iris()
@@ -98,7 +98,7 @@ data 	= pd.DataFrame(iris.data[:, :4])
 data.columns = iris.feature_names
 ```
 
-* Initialize the model.
+**Initialize the model.**
 ```python
 m = som.map(xdim=10,ydim=5,train=1000,norm=False) 
 ```
@@ -109,41 +109,41 @@ m = som.map(xdim=10,ydim=5,train=1000,norm=False)
   - norm - normalize the input data space
 
 
-* Train the data.
+**Train the data.**
 ```python
 m.fit(data,labels)
 ```
 
-* Compute the relative significance of each feature and plot it
+**Compute the relative significance of each feature and plot it**
 ```python
 m.significance()
 ```
 <img src="image/sign.png"/>
 
-* Compute the convergence index of a map
+**Compute the convergence index of a map**
 ```python
 m.convergence()
 1.0
 ```
-* Evaluate the embedding of a map using the F-test and a Bayesian estimate of the variance in the training data
+**Evaluate the embedding of a map using the F-test and a Bayesian estimate of the variance in the training data**
 ```python
 m.embed()
 1.0
 ```
 
-* Measure the topographic accuracy of the map using sampling
+**Measure the topographic accuracy of the map using sampling**
 ```python
 m.topo()
 {'val': 0.97999999999999998, 'lo': 0.93999999999999995, 'hi': 1.0}
 ```
 
-* Compute and display the starburst representation of clusters
+**Compute and display the starburst representation of clusters**
 ```python
 m.starburst()
 ```
 <img src="image/iris.png"/>
 
-* Plot that shows the marginal probability distribution of the neurons and data
+**Plot that shows the marginal probability distribution of the neurons and data**
 ```python
 m.marginal(0)
 m.marginal(1)
@@ -161,7 +161,7 @@ m.marginal(3)
   <img src="image/Figure_4.png" width="400" /> 
 </p>
 
-* Print the association of labels with map elements
+**Print the association of labels with map elements**
 ```python
 m.projection()
      labels  x  y
@@ -184,7 +184,7 @@ m.projection()
 149       2  2  4
 ```
 
-* Returns the contents of a neuron at (x,y) on the map as a vector
+**Returns the contents of a neuron at (x,y) on the map as a vector**
 ```python
 m.neuron(6,3)
 array([ 5.21176518,  2.61068045,  3.63423014,  1.18464818])
