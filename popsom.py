@@ -1,6 +1,9 @@
 import sys
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 import seaborn as sns					
 from random import randint
 from sklearn.metrics.pairwise import euclidean_distances
@@ -9,7 +12,6 @@ import statistics as stat               # F-test
 from scipy import stats                 # KS Test
 from scipy.stats import f               # F-test
 from itertools import combinations
-import matplotlib.pyplot as plt
 
 class map:
 	def __init__(self, xdim=10, ydim=5, alpha=.3, train=1000, norm=False):
