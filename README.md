@@ -49,6 +49,13 @@ import pandas as pd
 from   sklearn import datasets
 ```
 
+**If you got following error message:  ImportError: cannot import name 'datetools'  You need to re-install the datatools like this**
+```python
+pip3 uninstall statsmodels
+pip3 install numpy scipy patsy pandas
+pip3 install statsmodels
+```
+
 **Prepare the data for training.**
 ```python
 animal = ['dove','hen','duck','owl','eagle','fox','dog','wolf','cat','tiger','lion','horse','cow']
