@@ -422,11 +422,17 @@ class map:
 		if (x <= 1 or y <= 1):
 			sys.exit("plot_heat: map dimensions too small")
 
-		tmp = pd.cut(heat, bins=100, labels=False)
+		# tmp = pd.cut(heat, bins=100, labels=False)
+		# Comments out for issue: ValueError: Input array must be 1 dimensional after pandas upgrade to 0.24.1
 
-		tmp_1 = np.array(np.matrix.transpose(tmp))
+		# tmp_1 = np.array(np.matrix.transpose(tmp))
+		# Comments out for issue: ValueError: Input array must be 1 dimensional after pandas upgrade to 0.24.1
+		
 		fig, ax = plt.subplots()
-		ax.pcolor(tmp_1, cmap=plt.cm.YlOrRd)
+		# ax.pcolor(tmp_1, cmap=plt.cm.YlOrRd)
+		# Comments out for issue: ValueError: Input array must be 1 dimensional after pandas upgrade to 0.24.1
+		
+		ax.pcolor(heat, cmap=plt.cm.YlOrRd)
 		ax.set_xticks(np.arange(x)+0.5, minor=False)
 		ax.set_yticks(np.arange(y)+0.5, minor=False)
 		plt.xlabel("x")
