@@ -52,7 +52,7 @@ from   sklearn import datasets
 **If you got following error message:  ImportError: cannot import name 'datetools'  You need to re-install the datatools like this**
 ```python
 pip3 uninstall statsmodels
-pip3 install numpy scipy patsy pandas
+pip3 install numpy scipy pandas
 pip3 install statsmodels
 ```
 
