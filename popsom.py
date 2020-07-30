@@ -422,7 +422,9 @@ class map:
 		if (x <= 1 or y <= 1):
 			sys.exit("plot_heat: map dimensions too small")
 
-		tmp = pd.cut(heat, bins=100, labels=False)
+		heat_tmp = np.squeeze(np.asarray(heat)).flatten()   	# Convert 2D Array to 1D
+		tmp = pd.cut(heat_tmp, bins=100, labels=False)
+		tmp = np.reshape(tmp, (-1, y))				# Convert 1D Array to 2D
 		
 		tmp_1 = np.array(np.matrix.transpose(tmp))
 		
