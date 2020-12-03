@@ -2,6 +2,8 @@
 
 POPSOM is a Python library for dealing with population-base Self-Organizing Maps. This work was derived from [R-based POPSOM](https://github.com/lutzhamel/popsom) which developed and maintained by [Dr. Lutz Hamel](https://web.uri.edu/cs/meet/lutz-hamel/) and his former students. 
 
+This version of popsom is based on the R implementation of popsom version 4.x.  Furthermore it is missing key functionality compared to the R implementation, namely, the native implementation of the VSOM training algorithm based on ideas from tensor algebra.
+
 ## Installation
 
 ### Requirements
