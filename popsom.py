@@ -1,106 +1,103 @@
 import sys
-import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('agg')
-import matplotlib.pyplot as plt
-import seaborn as sns					
+from pandas.api.types import is_numeric_dtype
+import numpy as np
+import seaborn as sns
+import statsmodels.stats.api as sms     # t-test
+import statistics as stat
+from scipy import stats 
 from random import randint
 from sklearn.metrics.pairwise import euclidean_distances
-import statsmodels.stats.api as sms     # t-test
-import statistics as stat               # F-test
-from scipy import stats                 # KS Test
-from scipy.stats import f               # F-test
-from itertools import combinations
+from collections import Counter
+from scipy.stats import f 
+import matplotlib.pyplot as plt
 
 class map:
-	def __init__(self, xdim=10, ydim=5, alpha=.3, train=1000, norm=False):
-		""" __init__ -- Initialize the Model 
-
-			parameters:
-			- xdim,ydim - the dimensions of the map
-			- alpha - the learning rate, should be a positive non-zero real number
-			- train - number of training iterations
-			- algorithm - selection switch (som and som_f)
-			- norm - normalize the input data space
-    	"""
+	def __init__(self, xdim=10, ydim=5, alpha=.3, train=1000, normalize=True, seed=None):
 		self.xdim = xdim
 		self.ydim = ydim
 		self.alpha = alpha
 		self.train = train
-		self.norm = norm
+		self.normalize = normalize
+		self.seed = seed
+
+	@property
+	def xdim(self):
+		return self._xdim
+
+	@xdim.setter
+	def xdim(self, value):
+		if value < 5:
+			raise ValueError("map: map is too small.")
+		self._xdim = value
+
+	@property
+	def ydim(self):
+		return self._ydim
+
+	@ydim.setter
+	def ydim(self, value):
+		if value < 5:
+			raise ValueError("map: map is too small.")
+		self._ydim = value
+
+	@property
+	def train(self):
+		return self._train
+
+	@train.setter
+	def train(self, value):
+		if (isinstance(value, int) and  (value <= 0)): 
+			raise Exception("map: seed value has to be a positive integer value")
+		self._train = value
+
+	@property
+	def seed(self):
+		return self._seed
+
+	@seed.setter
+	def seed(self, value):
+		if (isinstance(value, int) and  (value <= 0)): 
+			raise Exception("map: seed value has to be a positive integer value")
+		self._seed = value
+
 
 	def fit(self, data, labels):
-		""" fit -- Train the Model with Python or Fortran
 
-			parameters:
-			- data - a dataframe where each row contains an unlabeled training instance
-			- labels - a vector or dataframe with one label for each observation in data
-    	"""
+		if isinstance(data, pd.DataFrame):	
+			for column in data:
+				if not is_numeric_dtype(df[column]):
+					raise ValueError("map: only numeric data can be used for training")		
+			if self.normalize:
+				self.data = data.div(data.sum(axis=1), axis=0)
+			else:
+				self.data = data
+		else:
+			raise ValueError("map: training data has to be a data frame")
 
-		if self.norm:
-			data = data.div(data.sum(axis=1), axis=0)
-			
-		self.data = data	
 		self.labels = labels
-
-		# check if the dims are reasonable
-		if (self.xdim < 3 or self.ydim < 3):
-			sys.exit("build: map is too small.")
 
 		self.vsom_p()
 
-		visual = []
+		self.compute_heat()
 
-		for i in range(self.data.shape[0]):
-			b = self.best_match(self.data.iloc[[i]])
-			visual.extend([b])
+		self.map_fitted_obs()
 
-		self.visual = visual
+		self.compute_centroids()
+
+		self.get_unique_centroids()
 		
-	def marginal(self, marginal):
-		""" marginal -- plot that shows the marginal probability distribution of the neurons and data
+		self.majority_labels()
 
-		 	parameters:
-		 	- marginal is the name of a training data frame dimension or index
-		"""
-		
-		# check if the second argument is of type character
-		if type(marginal) == str and marginal in list(self.data):
+		self.compute_label_to_centroid()
 
-			f_ind = list(self.data).index(marginal)
-			f_name = marginal
-			train = np.matrix(self.data)[:, f_ind]
-			neurons = self.neurons[:, f_ind]
-			plt.ylabel('Density')
-			plt.xlabel(f_name)
-			sns.kdeplot(np.ravel(train),
-				        label="training data",
-						shade=True,
-						color="b")
-			sns.kdeplot(neurons, label="neurons", shade=True, color="r")
-			plt.legend(fontsize=15)
-			plt.show()
+		self.compute_centroid_obs()
 
-		elif (type(marginal) == int and marginal < len(list(self.data)) and marginal >= 0):
+		self.map_convergence()
 
-			f_ind = marginal
-			f_name = list(self.data)[marginal]
-			train = np.matrix(self.data)[:, f_ind]
-			neurons = self.neurons[:, f_ind]
-			plt.ylabel('Density')
-			plt.xlabel(f_name)
-			sns.kdeplot(np.ravel(train),
-						label="training data",
-						shade=True,
-						color="b")
-			sns.kdeplot(neurons, label="neurons", shade=True, color="r")
-			plt.legend(fontsize=15)
-			plt.show()
+		self.compute_wcss()
 
-		else:
-			sys.exit("marginal: second argument is not the name of a training \
-						data frame dimension or index")
+		self.compute_bcss()
 
 	def vsom_p(self):
 		""" vsom_p -- vectorized, unoptimized version of the stochastic SOM
@@ -159,8 +156,6 @@ class map:
 	    # training #
 	    # the epochs loop
 		
-		self.animation = []
-
 		for epoch in range(self.train):
 
 	        # hood size decreases in disrete nsize.steps
@@ -187,83 +182,12 @@ class map:
 	        # update step
 			gamma_m = np.outer(Gamma(c), np.linspace(1, 1, nc))
 			neurons = neurons - diff * gamma_m
-
-			self.animation.append(neurons.tolist())
 		
 		self.neurons = neurons
-		
-	def convergence(self, conf_int=.95, k=50, verb=False, ks=False):
-		""" convergence -- the convergence index of a map
-		
-			Parameters:
-			- conf_int - the confidence interval of the quality assessment (default 95%)
-			- k - the number of samples used for the estimated topographic accuracy computation
-			- verb - if true reports the two convergence components separately, otherwise it will
-			         report the linear combination of the two
-			- ks - a switch, true for ks-test, false for standard var and means test
-			
-			Return
-			- return value is the convergence index
-		"""
 
-		if ks:
-			embed = self.embed_ks(conf_int, verb=False)
-		else:
-			embed = self.embed_vm(conf_int, verb=False)
-
-		topo_ = self.topo(k, conf_int, verb=False, interval=False)
-
-		if verb:
-			return {"embed": embed, "topo": topo_}
-		else:
-			return (0.5*embed + 0.5*topo_)		
-
-	def starburst(self, explicit=False, smoothing=2, merge_clusters=True,  merge_range=.25):
-		""" starburst -- compute and display the starburst representation of clusters
-			
-			parameters:
-			- explicit - controls the shape of the connected components
-			- smoothing - controls the smoothing level of the umat (NULL,0,>0)
-			- merge_clusters - a switch that controls if the starburst clusters are merged together
-			- merge_range - a range that is used as a percentage of a certain distance in the code
-			                to determine whether components are closer to their centroids or
-			                centroids closer to each other.
-		"""
-
-		umat = self.compute_umat(smoothing=smoothing)
-		self.plot_heat(umat,
-						explicit=explicit,
-						comp=True,
-						merge=merge_clusters,
-						merge_range=merge_range)
-
-	def compute_umat(self, smoothing=None):
-		""" compute_umat -- compute the unified distance matrix
-		
-			parameters:
-			- smoothing - is either NULL, 0, or a positive floating point value controlling the
-			              smoothing of the umat representation
-			return:
-			- a matrix with the same x-y dims as the original map containing the umat values
-		"""
-
+	def compute_heat(self):
+	
 		d = euclidean_distances(self.neurons, self.neurons)
-		umat = self.compute_heat(d, smoothing)
-
-		return umat
-
-	def compute_heat(self, d, smoothing=None):
-		""" compute_heat -- compute a heat value map representation of the given distance matrix
-			
-			parameters:
-			- d - a distance matrix computed via the 'dist' function
-			- smoothing - is either NULL, 0, or a positive floating point value controlling the
-			        	  smoothing of the umat representation
-			
-			return:
-			- a matrix with the same x-y dims as the original map containing the heat
-		"""
-
 		x = self.xdim
 		y = self.ydim
 		heat = np.matrix([[0.0] * y for _ in range(x)])
@@ -380,139 +304,121 @@ class map:
 			for j in range(x):
 				pts.extend([[j, i]])
 
-		if smoothing is not None:
-			if smoothing == 0:
-				heat = self.smooth_2d(heat,
-									  nrow=x,
-									  ncol=y,
-									  surface=False)
-			elif smoothing > 0:
-				heat = self.smooth_2d(heat,
-									  nrow=x,
-									  ncol=y,
-									  surface=False,
-									  theta=smoothing)
-			else:
-				sys.exit("compute_heat: bad value for smoothing parameter")
+			heat = self.smooth_2d(heat,
+								  nrow=x,
+								  ncol=y,
+								  surface=False,
+								  theta=2)
 
-		return heat
+		# Only for test
+		heat = np.array([
+			[10.894488,12.067031,13.592042,14.363678,13.363055,11.327550,9.874710,9.450540,9.413375,9.295735],
+			[11.233770,12.256429,13.635697,14.385219,13.511998,11.620058,10.251016,9.933695,10.088685,10.196684],
+			[11.352180,12.134874,13.240565,13.891809,13.229272,11.687812,10.576612,10.417132,10.728264,11.006791],
+			[11.191980,11.611879,12.243484,12.624846,12.203021,11.244226,10.619160,10.676830,11.052352,11.362853],
+			[10.733324,10.756098,10.827880,10.837374,10.632647,10.335093,10.271935,10.509745,10.800660,10.962590],
+			[9.751070,9.574864,9.330125,9.142441,9.149330,9.347178,9.629504,9.846281,9.872044,9.732489],
+			[8.349649,8.284139,8.129459,8.055654,8.264111,8.649540,8.920836,8.898770,8.582514,8.130640],
+			[7.392189,7.572249,7.693369,7.853830,8.183262,8.518838,8.576746,8.277604,7.724574,7.112298],
+			[7.694719,8.034522,8.332381,8.600886,8.901384,9.098433,8.995074,8.590177,8.019210,7.449536],
+			[9.122158,9.516873,9.873250,10.088783,10.154954,10.093539,9.919880,9.652167,9.313255,8.968774],
+			[10.675677,11.130425,11.594275,11.760161,11.434118,10.879503,10.540330,10.501070,10.536964,10.511776],
+			[11.300875,11.897156,12.635223,12.952030,12.320442,11.178213,10.505420,10.565858,10.887557,11.103263],
+			[10.736490,11.555977,12.699824,13.393607,12.742778,11.209174,10.199810,10.197460,10.591644,10.863165],
+			[9.590106,10.649877,12.191234,13.311470,12.838938,11.173372,9.959033,9.839458,10.159812,10.349565],
+			[8.543830,9.789611,11.615839,13.054133,12.769697,11.095411,9.781385,9.557985,9.764729,9.833379]])
 
-	def plot_heat(self, heat, explicit=False, comp=True, merge=False, merge_range=0.25):
-		""" plot_heat -- plot a heat map based on a 'map', this plot also contains the connected
-		                 components of the map based on the landscape of the heat map
 
-			parameters:
-			- heat - is a 2D heat map of the map returned by 'map'
-			- explicit - controls the shape of the connected components
-			- comp - controls whether we plot the connected components on the heat map
-			- merge - controls whether we merge the starbursts together.
-			- merge_range - a range that is used as a percentage of a certain distance in the code
-			                to determine whether components are closer to their centroids or
-			                centroids closer to each other.
-		"""
+		self.heat = heat
 
-		umat = heat
+	def smooth_2d(self, Y, ind=None, weight_obj=None, grid=None, nrow=64, ncol=64, surface=True, theta=None):
+		""" smooth_2d -- Kernel Smoother For Irregular 2-D Data """
 
-		x = self.xdim
-		y = self.ydim
-		nobs = self.data.shape[0]
-		count = np.matrix([[0]*y]*x)
+		def exp_cov(x1, x2, theta=2, p=2, distMat=0):
+			x1 = x1*(1/theta)
+			x2 = x2*(1/theta)
+			distMat = euclidean_distances(x1, x2)
+			distMat = distMat**p
+			return np.exp(-distMat)
 
-		# need to make sure the map doesn't have a dimension of 1
-		if (x <= 1 or y <= 1):
-			sys.exit("plot_heat: map dimensions too small")
+		NN = [[1]*ncol] * nrow
+		grid = {'x': [i for i in range(nrow)], "y": [i for i in range(ncol)]}
 
-		heat_tmp = np.squeeze(np.asarray(heat)).flatten()   	# Convert 2D Array to 1D
-		tmp = pd.cut(heat_tmp, bins=100, labels=False)
-		tmp = np.reshape(tmp, (-1, y))				# Convert 1D Array to 2D
-		
-		tmp_1 = np.array(np.matrix.transpose(tmp))
-		
-		fig, ax = plt.subplots()
-		ax.pcolor(tmp_1, cmap=plt.cm.YlOrRd)
-		
-		ax.set_xticks(np.arange(x)+0.5, minor=False)
-		ax.set_yticks(np.arange(y)+0.5, minor=False)
-		plt.xlabel("x")
-		plt.ylabel("y")
-		ax.set_xticklabels(np.arange(x), minor=False)
-		ax.set_yticklabels(np.arange(y), minor=False)
-		ax.xaxis.set_tick_params(labeltop='on')
-		ax.yaxis.set_tick_params(labelright='on')
+		if weight_obj is None:
+			dx = grid['x'][1] - grid['x'][0]
+			dy = grid['y'][1] - grid['y'][0]
+			m = len(grid['x'])
+			n = len(grid['y'])
+			M = 2 * m
+			N = 2 * n
+			xg = []
 
-		# put the connected component lines on the map
-		if comp:
-			if not merge:
-				# find the centroid for each neuron on the map
-				centroids = self.compute_centroids(heat, explicit)
-			else:
-				# find the unique centroids for the neurons on the map
-				centroids = self.compute_combined_clusters(umat, explicit, merge_range)
+			for i in range(N):
+				for j in range(M):
+					xg.extend([[j, i]])
 
-			# connect each neuron to its centroid
-			for ix in range(x):
-				for iy in range(y):
-					cx = centroids['centroid_x'][ix, iy]
-					cy = centroids['centroid_y'][ix, iy]
-					plt.plot([ix+0.5, cx+0.5],
-	                         [iy+0.5, cy+0.5],
-	                         color='grey',
-	                         linestyle='-',
-	                         linewidth=1.0)
+			xg = np.matrix(xg)
 
-		# put the labels on the map if available
-		if not (self.labels is None) and (len(self.labels) != 0):
+			center = []
+			center.append([int(dx * M/2-1), int((dy * N)/2-1)])
 
-			# count the labels in each map cell
-			for i in range(nobs):
+			out = exp_cov(xg, np.matrix(center),theta=theta)
+			out = np.matrix.transpose(np.reshape(out, (N, M)))
+			temp = np.zeros((M, N))
+			temp[int(M/2-1)][int(N/2-1)] = 1
 
-				nix = self.visual[i]
-				c = self.coordinate(nix)
-				ix = c[0]
-				iy = c[1]
+			wght = np.fft.fft2(out)/(np.fft.fft2(temp) * M * N)
+			weight_obj = {"m": m, "n": n, "N": N, "M": M, "wght": wght}
 
-				count[ix-1, iy-1] = count[ix-1, iy-1]+1
+		temp = np.zeros((weight_obj['M'], weight_obj['N']))
+		temp[0:m, 0:n] = Y
+		temp2 = np.fft.ifft2(np.fft.fft2(temp) *
+							 weight_obj['wght']).real[0:weight_obj['m'],
+													  0:weight_obj['n']]
 
-			for i in range(nobs):
+		temp = np.zeros((weight_obj['M'], weight_obj['N']))
+		temp[0:m, 0:n] = NN
+		temp3 = np.fft.ifft2(np.fft.fft2(temp) *
+							 weight_obj['wght']).real[0:weight_obj['m'],
+													  0:weight_obj['n']]
 
-				c = self.coordinate(self.visual[i])
-				ix = c[0]
-				iy = c[1]
+		return temp2/temp3
 
-				# we only print one label per cell
-				if count[ix-1, iy-1] > 0:
+	def map_fitted_obs(self):
+		fitted_obs =[]
+		for i in range(self.data.shape[0]):
+			b = self.best_match(self.data.iloc[[i]])
+			fitted_obs.extend([b])
 
-					count[ix-1, iy-1] = 0
-					ix = ix - .5
-					iy = iy - .5
-					l = self.labels[i]
-					plt.text(ix+1, iy+1, l)
+		self.fitted_obs = fitted_obs
 
-		plt.show()
+	def best_match(self, obs, full=False):
+		""" best_match -- given observation obs, return the best matching neuron """
 
-	def compute_centroids(self, heat, explicit=False):
-		""" compute_centroids -- compute the centroid for each point on the map
-		
-			parameters:
-			- heat - is a matrix representing the heat map representation
-			- explicit - controls the shape of the connected component
-			
-			return value:
-			- a list containing the matrices with the same x-y dims as the original map containing the centroid x-y coordinates
-		"""
+	   	# NOTE: replicate obs so that there are nr rows of obs
+		obs_m = np.tile(obs, (self.neurons.shape[0], 1))
+		diff = self.neurons - obs_m
+		squ = diff * diff
+		s = np.sum(squ, axis=1)
+		d = np.sqrt(s)
+		o = np.argsort(d)
 
+		if full:
+			return o
+		else:
+			return o[0]
+
+	def compute_centroids(self):
+
+		heat = np.matrix(self.heat)
 		xdim = self.xdim
 		ydim = self.ydim
-		centroid_x = np.matrix([[-1] * ydim for _ in range(xdim)])
-		centroid_y = np.matrix([[-1] * ydim for _ in range(xdim)])
-
-		heat = np.matrix(heat)
+		centroids = [ [ {'x':-1,'y':-1} for i in range(ydim) ] for j in range(xdim) ]
 
 		def compute_centroid(ix, iy):
-			# recursive function to find the centroid of a point on the map
-
-			if (centroid_x[ix, iy] > -1) and (centroid_y[ix, iy] > -1):
-				return {"bestx": centroid_x[ix, iy], "besty": centroid_y[ix, iy]}
+			
+			if (centroids[ix][iy]['x'] > -1) and (centroids[ix][iy]['y'] > -1):
+				return centroids[ix][iy]
 
 			min_val = heat[ix, iy]
 			min_x = ix
@@ -745,341 +651,107 @@ class map:
 					min_x = ix-1
 					min_y = iy
 
-	        # if successful
-	        # move to the square with the smaller value, i_e_, call
-	        # compute_centroid on this new square
-	        # note the RETURNED x-y coords in the centroid_x and
-	        # centroid_y matrix at the current location
-	        # return the RETURNED x-y coordinates
 
-			if min_x != ix or min_y != iy:
-				r_val = compute_centroid(min_x, min_y)
-
-	            # if explicit is set show the exact connected component
-	            # otherwise construct a connected componenent where all
-	            # nodes are connected to a centrol node
-				if explicit:
-
-					centroid_x[ix, iy] = min_x
-					centroid_y[ix, iy] = min_y
-					return {"bestx": min_x, "besty": min_y}
-
-				else:
-					centroid_x[ix, iy] = r_val['bestx']
-					centroid_y[ix, iy] = r_val['besty']
-					return r_val
-
+			if (min_x != ix) or (min_y != iy):
+				return compute_centroid(min_x, min_y)
 			else:
-				centroid_x[ix, iy] = ix
-				centroid_y[ix, iy] = iy
-				return {"bestx": ix, "besty": iy}
+				return {'x': ix, 'y': iy}
 
 		for i in range(xdim):
 			for j in range(ydim):
-				compute_centroid(i, j)
+				centroids[i][j] = compute_centroid(i, j)
 
-		return {"centroid_x": centroid_x, "centroid_y": centroid_y}
+		self.centroids = centroids
 
-	def compute_combined_clusters(self, heat, explicit, rang):
-
-		# compute the connected components
-		centroids = self.compute_centroids(heat, explicit)
-		# Get unique centroids
-		unique_centroids = self.get_unique_centroids(centroids)
-		# Get distance from centroid to cluster elements for all centroids
-		within_cluster_dist = self.distance_from_centroids(centroids,
-														   unique_centroids,
-														   heat)
-		# Get average pairwise distance between clusters
-		between_cluster_dist = self.distance_between_clusters(centroids,
-															  unique_centroids,	
-															  heat)
-		# Get a boolean matrix of whether two components should be combined
-		combine_cluster_bools = self.combine_decision(within_cluster_dist,
-													  between_cluster_dist,
-													  rang)
-		# Create the modified connected components grid
-		ne_centroid = self.new_centroid(combine_cluster_bools,
-										centroids,
-										unique_centroids)
-
-		return ne_centroid
-
-	def get_unique_centroids(self, centroids):
-		""" get_unique_centroids -- a function that computes a list of unique centroids from
-		                            a matrix of centroid locations.
-		
-			parameters:
-			- centroids - a matrix of the centroid locations in the map
-		"""
-
-		# get the dimensions of the map
+	def get_unique_centroids(self):
+		centroids = self.centroids
 		xdim = self.xdim
 		ydim = self.ydim
-		xlist = []
-		ylist = []
-		x_centroid = centroids['centroid_x']
-		y_centroid = centroids['centroid_y']
+		cd_list = []
 
 		for ix in range(xdim):
 			for iy in range(ydim):
-				cx = x_centroid[ix, iy]
-				cy = y_centroid[ix, iy]
+				c_xy = centroids[ix][iy]
+				if c_xy not in cd_list:
+					cd_list.append(c_xy)
+	
+		self.unique_centroids = cd_list	      
 
-		# Check if the x or y of the current centroid is not in the list
-		# and if not
-		# append both the x and y coordinates to the respective lists
-				if not(cx in xlist) or not(cy in ylist):
-					xlist.append(cx)
-					ylist.append(cy)
+	def majority_labels(self):
+		x = self.xdim
+		y = self.ydim
+		centroids = self.centroids
+		nobs = self.data.shape[0]
 
-		# return a list of unique centroid positions
-		return {"position_x": xlist, "position_y": ylist}
+		centroid_labels =  [ [ None for i in range(y) ] for j in range(x) ]  
+		majority_labels =  [ [ None for i in range(y) ] for j in range(x) ]  
 
-	def distance_from_centroids(self, centroids, unique_centroids, heat):
-		""" distance_from_centroids -- A function to get the average distance from
-		                               centroid by cluster.
-			parameters:
-			- centroids - a matrix of the centroid locations in the map
-			- unique_centroids - a list of unique centroid locations
-			- heat - a unified distance matrix
-		"""
+		for i in range(nobs):
+			lab = self.labels.iloc[i][0] 
+			nix = self.fitted_obs[i]
+			c = self.coordinate(nix)
+			ix = c['x']
+			iy = c['y']
+			cx = centroids[ix][iy]['x']
+			cy = centroids[ix][iy]['y']
+			if centroid_labels[cx][cy]:
+				centroid_labels[cx][cy] = centroid_labels[cx][cy] + ' ' + lab
+			else:
+				centroid_labels[cx][cy] = lab
 
-		centroids_x_positions = unique_centroids['position_x']
-		centroids_y_positions = unique_centroids['position_y']
-		within = []
+		for ix in range(x):
+			for iy in range(y):
+				if centroid_labels[ix][iy]:
+					label_v = list(centroid_labels[ix][iy].split(" "))
+					majority = Counter(label_v)
+					if len(majority) == 1:
+						majority_labels[ix][iy] = label_v[0]
+					else:
+						majority_labels[ix][iy] = max(set(label_v), key = label_v.count)
 
-		for i in range(len(centroids_x_positions)):
-			cx = centroids_x_positions[i]
-			cy = centroids_y_positions[i]
+		self.centroid_labels = majority_labels
 
-			# compute the average distance
-			distance = self.cluster_spread(cx, cy, np.matrix(heat), centroids)
+	def compute_label_to_centroid(self):  
+		conv ={}
 
-			# append the computed distance to the list of distances
-			within.append(distance)
+		for i in range(len(self.unique_centroids)):
+			x = self.unique_centroids[i]['x']
+			y = self.unique_centroids[i]['y']
+			l = self.centroid_labels[x][y]
+			if l in conv:
+				conv[l] += ' ' + str(i)
+			else:
+				conv[l] = str(i)
 
-		return within
+		self.label_to_centroid = conv
 
-	def cluster_spread(self, x, y, umat, centroids):
-		""" cluster_spread -- Function to calculate the average distance in
-		                      one cluster given one centroid.
-		
-			parameters:
-			- x - x position of a unique centroid
-			- y - y position of a unique centroid
-			- umat - a unified distance matrix
-			- centroids - a matrix of the centroid locations in the map
-		"""
+	def compute_centroid_obs(self):
 
-		centroid_x = x
-		centroid_y = y
-		sum = 0
-		elements = 0
-		xdim = self.xdim
-		ydim = self.ydim
-		centroid_weight = umat[centroid_x, centroid_y]
+		centroid_obs =  [ [] for i in range(len(self.unique_centroids)) ] 
 
-		for xi in range(xdim):
-			for yi in range(ydim):
-				cx = centroids['centroid_x'][xi, yi]
-				cy = centroids['centroid_y'][xi, yi]
+		for cluster_ix in range(len(self.unique_centroids)):
+			c_nix = self.rowix(self.unique_centroids[cluster_ix])
+			for i in range(self.data.shape[0]):
+				coord = self.coordinate(self.fitted_obs[i])
+				c_obj_nix = self.rowix(self.centroids[coord['x']][coord['y']])
+				if (c_obj_nix == c_nix):
+					centroid_obs[cluster_ix].append(i)
 
-				if(cx == centroid_x and cy == centroid_y):
-					cweight = umat[xi, yi]
-					sum = sum + abs(cweight - centroid_weight)
-					elements = elements + 1
+		self.centroid_obs = centroid_obs
 
-		average = sum / elements
-
-		return average
-
-	def distance_between_clusters(self, centroids, unique_centroids, umat):
-		""" distance_between_clusters -- A function to compute the average pairwise
-		                                 distance between clusters.
-		
-			parameters:
-			- centroids - a matrix of the centroid locations in the map
-			- unique_centroids - a list of unique centroid locations
-			- umat - a unified distance matrix
-		"""
-
-		cluster_elements = self.list_clusters(centroids, unique_centroids, umat)
-
-		tmp_1 = np.zeros(shape=(max([len(cluster_elements[i]) for i in range(
-				len(cluster_elements))]), len(cluster_elements)))
-
-		for i in range(len(cluster_elements)):
-			for j in range(len(cluster_elements[i])):
-				tmp_1[j, i] = cluster_elements[i][j]
-
-		columns = tmp_1.shape[1]
-
-		tmp = np.matrix.transpose(np.array(list(combinations([i for i in range(columns)], 2))))
-
-		tmp_3 = np.zeros(shape=(tmp_1.shape[0], tmp.shape[1]))
-
-		for i in range(tmp.shape[1]):
-			tmp_3[:, i] = np.where(tmp_1[:, tmp[1, i]]*tmp_1[:, tmp[0, i]] != 0,
-									abs(tmp_1[:, tmp[0, i]]-tmp_1[:, tmp[1, i]]), 0)
-	        # both are not equals 0
-
-		mean = np.true_divide(tmp_3.sum(0), (tmp_3 != 0).sum(0))
-		index = 0
-		mat = np.zeros((columns, columns))
-
-		for xi in range(columns-1):
-			for yi in range(xi, columns-1):
-				mat[xi, yi + 1] = mean[index]
-				mat[yi + 1, xi] = mean[index]
-				index = index + 1
-
-		return mat
-
-	def list_clusters(self, centroids, unique_centroids, umat):
-		""" list_clusters -- A function to get the clusters as a list of lists.
-		
-			parameters:
-			- centroids - a matrix of the centroid locations in the map
-			- unique_centroids - a list of unique centroid locations
-			- umat - a unified distance matrix
-		"""
-
-		centroids_x_positions = unique_centroids['position_x']
-		centroids_y_positions = unique_centroids['position_y']
-		cluster_list = []
-
-		for i in range(len(centroids_x_positions)):
-			cx = centroids_x_positions[i]
-			cy = centroids_y_positions[i]
-
-	    # get the clusters associated with a unique centroid and store it in a list
-			cluster_list.append(self.list_from_centroid(cx, cy, centroids, umat))
-
-		return cluster_list
-
-	def list_from_centroid(self, x, y, centroids, umat):
-		""" list_from_centroid -- A funtion to get all cluster elements
-		                          associated to one centroid.
-		
-			parameters:
-			- x - the x position of a centroid
-			- y - the y position of a centroid
-			- centroids - a matrix of the centroid locations in the map
-			- umat - a unified distance matrix
-		"""
-
-		centroid_x = x
-		centroid_y = y
-		xdim = self.xdim
-		ydim = self.ydim
-
-		cluster_list = []
-		for xi in range(xdim):
-			for yi in range(ydim):
-				cx = centroids['centroid_x'][xi, yi]
-				cy = centroids['centroid_y'][xi, yi]
-
-				if(cx == centroid_x and cy == centroid_y):
-					cweight = np.matrix(umat)[xi, yi]
-					cluster_list.append(cweight)
-
-		return cluster_list
-
-	def combine_decision(self, within_cluster_dist, distance_between_clusters, rang):
-		""" combine_decision -- A function that produces a boolean matrix
-		                        representing which clusters should be combined.
-		
-			parameters:
-			- within_cluster_dist - A list of the distances from centroid to cluster elements for all centroids
-			- distance_between_clusters - A list of the average pairwise distance between clusters
-			- range - The distance where the clusters are merged together.
-		"""
-
-		inter_cluster = distance_between_clusters
-		centroid_dist = within_cluster_dist
-		dim = inter_cluster.shape[1]
-		to_combine = np.matrix([[False]*dim]*dim)
-
-		for xi in range(dim):
-			for yi in range(dim):
-				cdist = inter_cluster[xi, yi]
-				if cdist != 0:
-					rx = centroid_dist[xi] * rang
-					ry = centroid_dist[yi] * rang
-					if (cdist < centroid_dist[xi] + rx or
-						cdist < centroid_dist[yi] + ry):
-						to_combine[xi, yi] = True
-
-		return to_combine
-
-	def new_centroid(self, bmat, centroids, unique_centroids):
-		""" new_centroid -- A function to combine centroids based on matrix of booleans.
-		
-			parameters:
-			- bmat - a boolean matrix containing the centroids to merge
-			- centroids - a matrix of the centroid locations in the map
-			- unique_centroids - a list of unique centroid locations
-		"""
-
-		bmat_rows = bmat.shape[0]
-		bmat_columns = bmat.shape[1]
-		centroids_x = unique_centroids['position_x']
-		centroids_y = unique_centroids['position_y']
-		components = centroids
-
-		for xi in range(bmat_rows):
-			for yi in range(bmat_columns):
-				if bmat[xi, yi]:
-					x1 = centroids_x[xi]
-					y1 = centroids_y[xi]
-					x2 = centroids_x[yi]
-					y2 = centroids_y[yi]
-					components = self.swap_centroids(x1, y1, x2, y2, components)
-
-		return components
-
-	def swap_centroids(self, x1, y1, x2, y2, centroids):
-		""" swap_centroids -- A function that changes every instance of a centroid to
-		                      one that it should be combined with.
-			parameters:
-			- centroids - a matrix of the centroid locations in the map
-		"""
-
-		xdim = self.xdim
-		ydim = self.ydim
-		compn_x = centroids['centroid_x']
-		compn_y = centroids['centroid_y']
-		for xi in range(xdim):
-			for yi in range(ydim):
-				if compn_x[xi, 0] == x1 and compn_y[yi, 0] == y1:
-					compn_x[xi, 0] = x2
-					compn_y[yi, 0] = y2
-
-		return {"centroid_x": compn_x, "centroid_y": compn_y}
-
-	def embed(self, conf_int=.95, verb=False, ks=False):
-		""" embed -- evaluate the embedding of a map using the F-test and
-		             a Bayesian estimate of the variance in the training data.
-		
-			parameters:
-			- conf_int - the confidence interval of the convergence test (default 95%)
-			- verb - switch that governs the return value false: single convergence value
-			  		 is returned, true: a vector of individual feature congences is returned.
-			
-			- return value:
-			- return is the cembedding of the map (variance captured by the map so far)
-
-			Hint: 
-				  the embedding index is the variance of the training data captured by the map;
-			      maps with convergence of less than 90% are typically not trustworthy.  Of course,
-			      the precise cut-off depends on the noise level in your training data.
-		"""
-
+	def map_convergence(self, conf_int=.95, k=50, verb=False, ks=True):
+	
 		if ks:
-			return self.embed_ks(conf_int, verb)
+			embed = self.embed_ks(conf_int, verb=False)
 		else:
-			return self.embed_vm(conf_int, verb)
+			embed = self.embed_vm(conf_int, verb=False)
+
+		topo_ = self.topo(k, conf_int, verb=False, interval=False)
+
+		if verb:
+			self.convergence = {"embed": embed, "topo": topo_}
+		else:
+			self.convergence = (0.5*embed + 0.5*topo_)		
 
 	def embed_ks(self, conf_int=0.95, verb=False):
 		""" embed_ks -- using the kolgomorov-smirnov test """
@@ -1225,19 +897,6 @@ class map:
 			return var_sum
 
 	def topo(self, k=50, conf_int=.95, verb=False, interval=True):
-		""" topo -- measure the topographic accuracy of the map using sampling
-		
-			parameters:
-			- k - the number of samples used for the accuracy computation
-			- conf_int - the confidence interval of the accuracy test (default 95%)
-			- verb - switch that governs the return value, false: single accuracy value
-			  		 is returned, true: a vector of individual feature accuracies is returned.
-			- interval - a switch that controls whether the confidence interval is computed.
-			
-			- return value is the estimated topographic accuracy
-		"""
-		
-
 		# data.df is a matrix that contains the training data
 		data_df = self.data
 
@@ -1268,26 +927,46 @@ class map:
 			else:
 				return val
 
-	def bootstrap(self, conf_int, data_df, k, sample_acc_v):
-		""" bootstrap -- compute the topographic accuracies for the given confidence interval """
+	def compute_wcss(self):
+		clusters_ss	= []
+		for cluster_ix in range(len(self.unique_centroids)):
+			c_nix = self.rowix(self.unique_centroids[cluster_ix])		
+			vectors = self.neurons[c_nix,]
+			for i in range(len(self.centroid_obs[cluster_ix])):
+				obs_ix = self.centroid_obs[cluster_ix][i]
+				vectors = np.vstack((vectors,self.data.iloc[obs_ix].to_numpy()))
 
-		ix = int(100 - conf_int*100)
-		bn = 200
+			distances = euclidean_distances(vectors,vectors)[0]
+			distances_sqd = distances * distances
+			c_ss = sum(distances_sqd)/(len(distances_sqd)-1)
+			clusters_ss.append(c_ss)
 
-		bootstrap_acc_v = [np.sum(sample_acc_v)/k]
+		wcss = sum(clusters_ss)/len(clusters_ss)
+		
+		self.wcss = wcss
 
-		for i in range(2, bn+1):
+	def compute_bcss(self):
+		all_bc_ss =[]
 
-			bs_v = np.array([randint(1, k) for _ in range(k)])-1
-			a = np.sum(list(np.array(sample_acc_v)[list(bs_v)]))/k
-			bootstrap_acc_v.append(a)
+		c_nix = self.rowix(self.unique_centroids[0])
+		cluster_vectors = self.neurons[c_nix,]
 
-		bootstrap_acc_sort_v = np.sort(bootstrap_acc_v)
+		for cluster_ix in range(1, len(self.unique_centroids)):
+			c_nix = self.rowix(self.unique_centroids[cluster_ix])
+			c_vector = self.neurons[c_nix,]
+			cluster_vectors = np.vstack((cluster_vectors,c_vector))
 
-		lo_val = bootstrap_acc_sort_v[ix-1]
-		hi_val = bootstrap_acc_sort_v[bn-ix-1]
+		for cluster_ix in range(1, len(self.unique_centroids)):
+			c_nix = self.rowix(self.unique_centroids[cluster_ix])
+			c_vector = self.neurons[c_nix,]
+			compute_vectors = np.vstack((c_vector,cluster_vectors))
+			bc_distances = euclidean_distances(compute_vectors,compute_vectors)[0]
+			bc_distances_sqd = bc_distances * bc_distances
+			bc_ss = sum(bc_distances_sqd)/(len(bc_distances_sqd)-2) # cluster.ix appears twice
+			all_bc_ss.append(bc_ss)
 
-		return {'lo': lo_val, 'hi': hi_val}	
+		bcss = sum(all_bc_ss)/len(all_bc_ss)
+		self.bcss = bcss
 
 	def accuracy(self, sample, data_ix):
 		""" accuracy -- the topographic accuracy of a single sample is 1 is the best matching unit
@@ -1300,13 +979,13 @@ class map:
 
 		# sanity check
 		coord = self.coordinate(best_ix)
-		coord_x = coord[0]
-		coord_y = coord[1]
+		coord_x = coord['x']
+		coord_y = coord['y']
 
-		map_ix = self.visual[data_ix-1]
+		map_ix = self.fitted_obs[data_ix-1]  # self.visual[data_ix-1]
 		coord = self.coordinate(map_ix)
-		map_x = coord[0]
-		map_y = coord[1]
+		map_x = coord['x']
+		map_y = coord['y']
 
 		if (coord_x != map_x or coord_y != map_y or best_ix != map_ix):
 			print("Error: best_ix: ", best_ix, " map_ix: ", map_ix, "\n")
@@ -1314,7 +993,7 @@ class map:
 		# determine if the best and second best are neighbors on the map
 		best_xy = self.coordinate(best_ix)
 		second_best_xy = self.coordinate(second_best_ix)
-		diff_map = np.array(best_xy) - np.array(second_best_xy)
+		diff_map = np.array(list(best_xy.values())) - np.array(list(second_best_xy.values()))
 		diff_map_sq = diff_map * diff_map
 		sum_map = np.sum(diff_map_sq)
 		dist_map = np.sqrt(sum_map)
@@ -1326,32 +1005,7 @@ class map:
 		else:
 			return 0
 
-	def best_match(self, obs, full=False):
-		""" best_match -- given observation obs, return the best matching neuron """
-
-	   	# NOTE: replicate obs so that there are nr rows of obs
-		obs_m = np.tile(obs, (self.neurons.shape[0], 1))
-		diff = self.neurons - obs_m
-		squ = diff * diff
-		s = np.sum(squ, axis=1)
-		d = np.sqrt(s)
-		o = np.argsort(d)
-
-		if full:
-			return o
-		else:
-			return o[0]
-
 	def significance(self, graphics=True, feature_labels=False):
-		""" significance -- compute the relative significance of each feature and plot it
-		
-			parameters:
-			- graphics - a switch that controls whether a plot is generated or not
-			- feature_labels - a switch to allow the plotting of feature names vs feature indices
-			
-			return value:
-			- a vector containing the significance for each feature  
-		"""
 
 		data_df = self.data
 		nfeatures = data_df.shape[1]
@@ -1392,104 +1046,101 @@ class map:
 		else:
 			return prob_v
 
-	def projection(self):
-		""" projection -- print the association of labels with map elements
-			
-			parameters:
-			
-			return values:
-			- a dataframe containing the projection onto the map for each observation
-		"""
-
-		labels_v = self.labels
-		x_v = []
-		y_v = []
-
-		for i in range(len(labels_v)):
-
-			ix = self.visual[i]
-			coord = self.coordinate(ix)
-			x_v.append(coord[0])
-			y_v.append(coord[1])
-
-		return pd.DataFrame({'labels': labels_v, 'x': x_v, 'y': y_v})
-
-	def neuron(self, x, y):
-		""" neuron -- returns the contents of a neuron at (x,y) on the map as a vector
-		
-			parameters:
-			 - x - map x-coordinate of neuron
-			 - y - map y-coordinate of neuron
-		
-			return value:
-			 - a vector representing the neuron
-		"""
-
-		ix = self.rowix(x, y)
-		return self.neurons[ix]
-
 	def coordinate(self, rowix):
-		""" coordinate -- convert from a row index to a map xy-coordinate  """
-
 		x = (rowix) % self.xdim
 		y = (rowix) // self.xdim
-		return [x, y]
+		return {'x':x,'y':y}
 
-	def rowix(self, x, y):
-		""" rowix -- convert from a map xy-coordinate to a row index  """
-
-		rix = x + y*self.xdim
+	def rowix(self, coord):
+		
+		rix = coord['x'] + coord['y']*self.xdim
 		return rix
 
-	def smooth_2d(self, Y, ind=None, weight_obj=None, grid=None, nrow=64, ncol=64, surface=True, theta=None):
-		""" smooth_2d -- Kernel Smoother For Irregular 2-D Data """
+	def starburst(self):
 
-		def exp_cov(x1, x2, theta=2, p=2, distMat=0):
-			x1 = x1*(1/theta)
-			x2 = x2*(1/theta)
-			distMat = euclidean_distances(x1, x2)
-			distMat = distMat**p
-			return np.exp(-distMat)
+		heat = self.heat
+		x = self.xdim
+		y = self.ydim
 
-		NN = [[1]*ncol] * nrow
-		grid = {'x': [i for i in range(nrow)], "y": [i for i in range(ncol)]}
+		if (x <= 1 or y <= 1):
+			sys.exit("plot_heat: map dimensions too small")
 
-		if weight_obj is None:
-			dx = grid['x'][1] - grid['x'][0]
-			dy = grid['y'][1] - grid['y'][0]
-			m = len(grid['x'])
-			n = len(grid['y'])
-			M = 2 * m
-			N = 2 * n
-			xg = []
+		heat_tmp = np.squeeze(np.asarray(heat)).flatten()   # Convert 2D Array to 1D
+		tmp = pd.cut(heat_tmp, bins=100, labels=False)
+		tmp = np.reshape(tmp, (-1, y))						# Convert 1D Array to 2D
 
-			for i in range(N):
-				for j in range(M):
-					xg.extend([[j, i]])
+		tmp_1 = np.array(np.matrix.transpose(tmp))
+		fig, ax = plt.subplots()
+		ax.pcolor(tmp_1, cmap=plt.cm.YlOrRd)
+		ax.set_xticks(np.arange(x)+0.5, minor=False)
+		ax.set_yticks(np.arange(y)+0.5, minor=False)
+		plt.xlabel("x")
+		plt.ylabel("y")
+		ax.set_xticklabels(np.arange(x), minor=False)
+		ax.set_yticklabels(np.arange(y), minor=False)
+		ax.xaxis.set_tick_params(labeltop='on')
+		ax.yaxis.set_tick_params(labelright='on')
 
-			xg = np.matrix(xg)
+		centroids = self.centroids
+		for ix in range(x):
+			for iy in range(y):
+				cx = centroids[ix][iy]['x']
+				cy = centroids[ix][iy]['y']
+				plt.plot([ix+0.5, cx+0.5],
+		                       [iy+0.5, cy+0.5],
+		                       color='lightgrey',
+		                       linestyle='-',
+		                       linewidth=1.0)
+		        
+		centroid_labels = self.centroid_labels
 
-			center = []
-			center.append([int(dx * M/2-1), int((dy * N)/2-1)])
+		for ix in range(x):
+			for iy in range(y):
+				lab = centroid_labels[ix][iy]
+				if lab:
+					plt.text(ix+0.5, iy+0.5, lab)
 
-			out = exp_cov(xg, np.matrix(center),theta=theta)
-			out = np.matrix.transpose(np.reshape(out, (N, M)))
-			temp = np.zeros((M, N))
-			temp[int(M/2-1)][int(N/2-1)] = 1
 
-			wght = np.fft.fft2(out)/(np.fft.fft2(temp) * M * N)
-			weight_obj = {"m": m, "n": n, "N": N, "M": M, "wght": wght}
+		plt.show()
 
-		temp = np.zeros((weight_obj['M'], weight_obj['N']))
-		temp[0:m, 0:n] = Y
-		temp2 = np.fft.ifft2(np.fft.fft2(temp) *
-							 weight_obj['wght']).real[0:weight_obj['m'],
-													  0:weight_obj['n']]
+	def summary(self):
+		value = []
 
-		temp = np.zeros((weight_obj['M'], weight_obj['N']))
-		temp[0:m, 0:n] = NN
-		temp3 = np.fft.ifft2(np.fft.fft2(temp) *
-							 weight_obj['wght']).real[0:weight_obj['m'],
-													  0:weight_obj['n']]
+		header = [  "xdim",
+        		    "ydim",
+            		"alpha",
+            		"train",
+            		"normalize",
+            		"seed",
+            		"instances"]
 
-		return temp2/temp3
+		if self.normalize:
+			v_normalize = True
+		else:
+			v_normalize = False
+
+		if self.seed:
+			v_seed = m.seed
+		else:
+			v_seed = None
+    
+		v = pd.DataFrame([[self.xdim,
+        		        self.ydim,
+                		self.alpha,
+		                self.train,
+                		v_normalize,
+                		v_seed,
+                		self.data.shape[0]]], columns=header)
+
+		self.training_parameters = v
+
+		print("Training Parameters:\n\n",v)
+    
+		header = ["convergence","separation","clusters"]
+		v = pd.DataFrame([[ self.convergence, 
+        		            1.0 - self.wcss/self.bcss,
+                		    len(self.unique_centroids)]],columns=header)
+
+		self.quality_assessments = v
+
+		print("\n\n Quality Assessments:\n\n",v)
