@@ -304,10 +304,10 @@ class map:
 				pts.extend([[j, i]])
 
 		heat = self.smooth_2d(heat,
-				  nrow=x,
-				  ncol=y,
-				  surface=False,
-				  theta=2)
+							  nrow=x,
+							  ncol=y,
+							  surface=False,
+							  theta=2)
 
 		# Only for test
 	
@@ -930,6 +930,27 @@ class map:
 				return {'val': val, 'lo': bval['lo'], 'hi': bval['hi']}
 			else:
 				return val
+
+	def bootstrap(self, conf_int, data_df, k, sample_acc_v):
+		""" bootstrap -- compute the topographic accuracies for the given confidence interval """
+
+		ix = int(100 - conf_int*100)
+		bn = 200
+
+		bootstrap_acc_v = [np.sum(sample_acc_v)/k]
+
+		for i in range(2, bn+1):
+
+			bs_v = np.array([randint(1, k) for _ in range(k)])-1
+			a = np.sum(list(np.array(sample_acc_v)[list(bs_v)]))/k
+			bootstrap_acc_v.append(a)
+
+		bootstrap_acc_sort_v = np.sort(bootstrap_acc_v)
+
+		lo_val = bootstrap_acc_sort_v[ix-1]
+		hi_val = bootstrap_acc_sort_v[bn-ix-1]
+
+		return {'lo': lo_val, 'hi': hi_val}	
 
 	def compute_wcss(self):
 		clusters_ss	= []
