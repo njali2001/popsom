@@ -303,11 +303,11 @@ class map:
 			for j in range(x):
 				pts.extend([[j, i]])
 
-			heat = self.smooth_2d(heat,
-								  nrow=x,
-								  ncol=y,
-								  surface=False,
-								  theta=2)
+		heat = self.smooth_2d(heat,
+				  nrow=x,
+				  ncol=y,
+				  surface=False,
+				  theta=2)
 
 		# Only for test
 	
