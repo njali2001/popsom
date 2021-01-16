@@ -66,7 +66,7 @@ class map:
 
 		if isinstance(data, pd.DataFrame):	
 			for column in data:
-				if not is_numeric_dtype(df[column]):
+				if not is_numeric_dtype(data[column]):
 					raise ValueError("map: only numeric data can be used for training")		
 			if self.normalize:
 				self.data = data.div(data.sum(axis=1), axis=0)
