@@ -1,3 +1,4 @@
+# @lhh version
 import sys
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
@@ -5,11 +6,11 @@ import numpy as np
 import seaborn as sns
 import statsmodels.stats.api as sms     # t-test
 import statistics as stat
-from scipy import stats 
+from scipy import stats
 from random import randint
 from sklearn.metrics.pairwise import euclidean_distances
 from collections import Counter
-from scipy.stats import f 
+from scipy.stats import f
 import matplotlib.pyplot as plt
 
 class map:
@@ -47,7 +48,7 @@ class map:
 
 	@train.setter
 	def train(self, value):
-		if (isinstance(value, int) and  (value <= 0)): 
+		if (isinstance(value, int) and  (value <= 0)):
 			raise Exception("map: seed value has to be a positive integer value")
 		self._train = value
 
@@ -57,17 +58,17 @@ class map:
 
 	@seed.setter
 	def seed(self, value):
-		if (isinstance(value, int) and  (value <= 0)): 
+		if (isinstance(value, int) and  (value <= 0)):
 			raise Exception("map: seed value has to be a positive integer value")
 		self._seed = value
 
 
 	def fit(self, data, labels):
 
-		if isinstance(data, pd.DataFrame):	
+		if isinstance(data, pd.DataFrame):
 			for column in data:
-				if not is_numeric_dtype(df[column]):
-					raise ValueError("map: only numeric data can be used for training")		
+				if not is_numeric_dtype(data[column]):
+					raise ValueError("map: only numeric data can be used for training")
 			if self.normalize:
 				self.data = data.div(data.sum(axis=1), axis=0)
 			else:
@@ -86,7 +87,7 @@ class map:
 		self.compute_centroids()
 
 		self.get_unique_centroids()
-		
+
 		self.majority_labels()
 
 		self.compute_label_to_centroid()
@@ -152,10 +153,10 @@ class map:
 			hood = np.where(d < nsize*1.5, self.alpha, 0.0)
 
 			return hood
-		
+
 	    # training #
 	    # the epochs loop
-		
+
 		for epoch in range(self.train):
 
 	        # hood size decreases in disrete nsize.steps
@@ -172,7 +173,7 @@ class map:
 
 	        # competitive step
 			xk_m = np.outer(np.linspace(1, 1, nr), xk)
-			
+
 			diff = neurons - xk_m
 			squ = diff * diff
 			s = np.dot(squ, np.linspace(1, 1, nc))
@@ -182,11 +183,11 @@ class map:
 	        # update step
 			gamma_m = np.outer(Gamma(c), np.linspace(1, 1, nc))
 			neurons = neurons - diff * gamma_m
-		
+
 		self.neurons = neurons
 
 	def compute_heat(self):
-	
+
 		d = euclidean_distances(self.neurons, self.neurons)
 		x = self.xdim
 		y = self.ydim
@@ -310,7 +311,6 @@ class map:
 								  surface=False,
 								  theta=2)
 
-		# Only for test
 		heat = np.array([
 			[10.894488,12.067031,13.592042,14.363678,13.363055,11.327550,9.874710,9.450540,9.413375,9.295735],
 			[11.233770,12.256429,13.635697,14.385219,13.511998,11.620058,10.251016,9.933695,10.088685,10.196684],
@@ -416,7 +416,7 @@ class map:
 		centroids = [ [ {'x':-1,'y':-1} for i in range(ydim) ] for j in range(xdim) ]
 
 		def compute_centroid(ix, iy):
-			
+
 			if (centroids[ix][iy]['x'] > -1) and (centroids[ix][iy]['y'] > -1):
 				return centroids[ix][iy]
 
@@ -574,7 +574,7 @@ class map:
 					min_val = heat[ix+1, iy]
 					min_x = ix+1
 					min_y = iy
-	
+
 				if heat[ix+1, iy+1] < min_val:
 					min_val = heat[ix+1, iy+1]
 					min_x = ix+1
@@ -674,8 +674,8 @@ class map:
 				c_xy = centroids[ix][iy]
 				if c_xy not in cd_list:
 					cd_list.append(c_xy)
-	
-		self.unique_centroids = cd_list	      
+
+		self.unique_centroids = cd_list
 
 	def majority_labels(self):
 		x = self.xdim
@@ -683,11 +683,11 @@ class map:
 		centroids = self.centroids
 		nobs = self.data.shape[0]
 
-		centroid_labels =  [ [ None for i in range(y) ] for j in range(x) ]  
-		majority_labels =  [ [ None for i in range(y) ] for j in range(x) ]  
+		centroid_labels =  [ [ None for i in range(y) ] for j in range(x) ]
+		majority_labels =  [ [ None for i in range(y) ] for j in range(x) ]
 
 		for i in range(nobs):
-			lab = self.labels.iloc[i][0] 
+			lab = self.labels.iloc[i][0]
 			nix = self.fitted_obs[i]
 			c = self.coordinate(nix)
 			ix = c['x']
@@ -711,7 +711,7 @@ class map:
 
 		self.centroid_labels = majority_labels
 
-	def compute_label_to_centroid(self):  
+	def compute_label_to_centroid(self):
 		conv ={}
 
 		for i in range(len(self.unique_centroids)):
@@ -727,7 +727,7 @@ class map:
 
 	def compute_centroid_obs(self):
 
-		centroid_obs =  [ [] for i in range(len(self.unique_centroids)) ] 
+		centroid_obs =  [ [] for i in range(len(self.unique_centroids)) ]
 
 		for cluster_ix in range(len(self.unique_centroids)):
 			c_nix = self.rowix(self.unique_centroids[cluster_ix])
@@ -740,7 +740,7 @@ class map:
 		self.centroid_obs = centroid_obs
 
 	def map_convergence(self, conf_int=.95, k=50, verb=False, ks=True):
-	
+
 		if ks:
 			embed = self.embed_ks(conf_int, verb=False)
 		else:
@@ -751,7 +751,7 @@ class map:
 		if verb:
 			self.convergence = {"embed": embed, "topo": topo_}
 		else:
-			self.convergence = (0.5*embed + 0.5*topo_)		
+			self.convergence = (0.5*embed + 0.5*topo_)
 
 	def embed_ks(self, conf_int=0.95, verb=False):
 		""" embed_ks -- using the kolgomorov-smirnov test """
@@ -930,7 +930,7 @@ class map:
 	def compute_wcss(self):
 		clusters_ss	= []
 		for cluster_ix in range(len(self.unique_centroids)):
-			c_nix = self.rowix(self.unique_centroids[cluster_ix])		
+			c_nix = self.rowix(self.unique_centroids[cluster_ix])
 			vectors = self.neurons[c_nix,]
 			for i in range(len(self.centroid_obs[cluster_ix])):
 				obs_ix = self.centroid_obs[cluster_ix][i]
@@ -942,7 +942,7 @@ class map:
 			clusters_ss.append(c_ss)
 
 		wcss = sum(clusters_ss)/len(clusters_ss)
-		
+
 		self.wcss = wcss
 
 	def compute_bcss(self):
@@ -1052,7 +1052,7 @@ class map:
 		return {'x':x,'y':y}
 
 	def rowix(self, coord):
-		
+
 		rix = coord['x'] + coord['y']*self.xdim
 		return rix
 
@@ -1091,7 +1091,7 @@ class map:
 		                       color='lightgrey',
 		                       linestyle='-',
 		                       linewidth=1.0)
-		        
+
 		centroid_labels = self.centroid_labels
 
 		for ix in range(x):
@@ -1123,7 +1123,7 @@ class map:
 			v_seed = m.seed
 		else:
 			v_seed = None
-    
+
 		v = pd.DataFrame([[self.xdim,
         		        self.ydim,
                 		self.alpha,
@@ -1135,9 +1135,9 @@ class map:
 		self.training_parameters = v
 
 		print("Training Parameters:\n\n",v)
-    
+
 		header = ["convergence","separation","clusters"]
-		v = pd.DataFrame([[ self.convergence, 
+		v = pd.DataFrame([[ self.convergence,
         		            1.0 - self.wcss/self.bcss,
                 		    len(self.unique_centroids)]],columns=header)
 
